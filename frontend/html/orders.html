@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Commandes - EcomSolutions</title>
+  <link rel="stylesheet" href="../css/main.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <link rel="stylesheet" href="../css/modals.css">
+</head>
+<body>
+  <div class="app-wrapper">
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="sidebar"></aside>
+
+    <!-- MAIN -->
+    <main class="main-content">
+      <!-- HEADER -->
+      <div class="header">
+        <div class="header-left">
+          <button class="btn-sidebar" onclick="toggleSidebar()">☰</button>
+          <h1>Commandes</h1>
+        </div>
+        <div class="header-right">
+          <button class="btn-primary" onclick="openCreateOrderModal()">+ Nouvelle Commande</button>
+          <div class="user-menu" id="userMenu"></div>
+        </div>
+      </div>
+
+      <!-- CONTENT -->
+      <div class="content">
+        <div class="card">
+          <div class="card-header">
+            <h2>Toutes les Commandes</h2>
+            <input type="search" id="searchOrders" placeholder="Chercher..." style="width: 250px; padding: 8px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm);">
+          </div>
+
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Numéro</th>
+                  <th>Client</th>
+                  <th>Montant</th>
+                  <th>Statut</th>
+                  <th>Paiement</th>
+                  <th>Date</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- MODALS -->
+  <script src="../js/modals.html"></script>
+
+  <!-- SCRIPTS -->
+  <script src="../js/api.js"></script>
+  <script src="../js/sidebar.js"></script>
+  <script src="../js/orders.js"></script>
+</body>
+</html>

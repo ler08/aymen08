@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Publicités - EcomSolutions</title>
+  <link rel="stylesheet" href="../css/main.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <link rel="stylesheet" href="../css/modals.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <div class="app-wrapper">
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="sidebar"></aside>
+
+    <!-- MAIN -->
+    <main class="main-content">
+      <!-- HEADER -->
+      <div class="header">
+        <div class="header-left">
+          <button class="btn-sidebar" onclick="toggleSidebar()">☰</button>
+          <h1>Publicités & Campagnes</h1>
+        </div>
+        <div class="header-right">
+          <button class="btn-primary" onclick="openCreateAdModal()">+ Nouvelle Campagne</button>
+          <div class="user-menu" id="userMenu"></div>
+        </div>
+      </div>
+
+      <!-- CONTENT -->
+      <div class="content">
+        <!-- SUMMARY CARDS -->
+        <div id="adsSummary" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px;">
+          <!-- Rempli dynamiquement -->
+        </div>
+
+        <!-- CHARTS -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 24px; margin-bottom: 24px;">
+          <div class="card">
+            <div class="card-header">
+              <h3>Budget vs Dépensé</h3>
+            </div>
+            <canvas id="adsChart1"></canvas>
+          </div>
+          <div class="card">
+            <div class="card-header">
+              <h3>CTR par Campagne</h3>
+            </div>
+            <canvas id="adsChart2"></canvas>
+          </div>
+        </div>
+
+        <!-- TABLE -->
+        <div class="card">
+          <div class="card-header">
+            <h2>Toutes les Campagnes</h2>
+            <input type="search" id="searchAds" placeholder="Chercher..." style="width: 250px; padding: 8px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm);">
+          </div>
+
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Nom</th>
+                  <th>Plateforme</th>
+                  <th>Audience Cible</th>
+                  <th>Budget</th>
+                  <th>Dépensé</th>
+                  <th>Impressions</th>
+                  <th>Clics</th>
+                  <th>CTR</th>
+                  <th>Statut</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- MODAL ADS -->
+  <div class="modal-overlay" id="adModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Nouvelle Campagne Publicitaire</h2>
+        <button class="modal-close" onclick="closeModal('adModal')">✕</button>
+      </div>
+      <div class="modal-body">
+        <form class="modal-form" id="adForm" onsubmit="handleAdSubmit(event)">
+          <div class="form-row">
+            <div class="form-group">
+              <label>Nom de la Campagne *</label>
+              <input type="text" id="adName" required>
+            </div>
+            <div class="form-group">
+              <label>Plateforme *</label>
+              <select id="adPlatform" required>
+                <option value="">Sélectionner</option>
+                <option value="facebook">Facebook/Instagram</option>
+                <option value="google">Google Ads</option>
+                <option value="tiktok">TikTok</option>
+                <option value="linkedin">LinkedIn</option>
+                <option value="twitter">Twitter</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Description</label>
+            <textarea id="adDescription" placeholder="Détails de la campagne..."></textarea>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Budget (€) *</label>
+              <input type="number" id="adBudget" step="0.01" required>
+            </div>
+            <div class="form-group">
+              <label>Dépensé (€)</label>
+              <input type="number" id="adSpent" step="0.01">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Audience Cible</label>
+            <input type="text" id="adAudience" placeholder="18-35 ans, Intéressés par...">
+          </div>
+
+          <div class="form-group">
+            <label>Statut</label>
+            <select id="adStatus">
+              <option value="active">Active</option>
+              <option value="paused">En pause</option>
+              <option value="completed">Terminée</option>
+            </select>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-cancel" onclick="closeModal('adModal')">Annuler</button>
+        <button class="btn-submit" onclick="document.getElementById('adForm').dispatchEvent(new Event('submit'))">Créer</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCRIPTS -->
+  <script src="../js/api.js"></script>
+  <script src="../js/sidebar.js"></script>
+  <script src="../js/ads.js"></script>
+</body>
+</html>

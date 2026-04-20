@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stock — EcomSolutions</title>
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/sidebar.css">
+  <link rel="stylesheet" href="css/components.css">
+</head>
+<body>
+<div class="app-layout">
+  <div class="main-content" id="mainContent">
+    <div id="topbarContainer"></div>
+    <div class="page-content">
+      <div class="grid-4" style="gap:16px;margin-bottom:28px;" id="stockStats"></div>
+
+      <div class="card" style="margin-bottom:20px;">
+        <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;">
+          <input type="text" class="form-control" id="searchStock"
+            placeholder="🔍 Rechercher produit..." oninput="filterStock()" style="flex:1;">
+          <select class="form-control" id="filterStockStatus" onchange="filterStock()" style="width:180px;">
+            <option value="">Tous les niveaux</option>
+            <option value="critique">🔴 Critique</option>
+            <option value="faible">🟠 Faible</option>
+            <option value="normal">🟢 Normal</option>
+          </select>
+          <button class="btn btn-primary" onclick="openAddProduct()">➕ Ajouter produit</button>
+          <button class="btn btn-secondary" onclick="reorderAll()">🔄 Réapprovisionner</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">🏪 Inventaire</span>
+          <span class="badge badge-blue" id="stockCount">0 produits</span>
+        </div>
+        <div class="table-container" id="stockTable"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="stockModal" onclick="closeModal('stockModal')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <h3 class="modal-title" id="stockModalTitle">Produit</h3>
+      <button class="modal-close" onclick="closeModal('stockModal')">✕</button>
+    </div>
+    <div class="modal-body" id="stockModalBody"></div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('stockModal')">Annuler</button>
+      <button class="btn btn-primary" onclick="saveProduct()">💾 Sauvegarder</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+<script src="js/auth.js"></script>
+<script src="js/sidebar.js"></script>
+<script src="js/stock.js"></script>
+</body>
+</html>

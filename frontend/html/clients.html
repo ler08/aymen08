@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Clients — EcomSolutions</title>
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/sidebar.css">
+  <link rel="stylesheet" href="css/components.css">
+</head>
+<body>
+<div class="app-layout">
+  <div class="main-content" id="mainContent">
+    <div id="topbarContainer"></div>
+    <div class="page-content">
+      <div class="grid-4" style="gap:16px;margin-bottom:28px;" id="clientStats"></div>
+
+      <div class="card" style="margin-bottom:20px;">
+        <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;">
+          <input type="text" class="form-control" id="searchClient"
+            placeholder="🔍 Rechercher un client..." oninput="filterClients()" style="flex:1;">
+          <select class="form-control" id="filterSegment" onchange="filterClients()" style="width:180px;">
+            <option value="">Tous les segments</option>
+            <option value="vip">⭐ VIP</option>
+            <option value="fidele">💙 Fidèle</option>
+            <option value="nouveau">🆕 Nouveau</option>
+            <option value="inactif">😴 Inactif</option>
+          </select>
+          <button class="btn btn-primary" onclick="exportClients()">📥 Exporter</button>
+          <button class="btn btn-secondary" onclick="openAddClient()">➕ Ajouter</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">👥 Base clients</span>
+          <span class="badge badge-blue" id="clientCount">0 clients</span>
+        </div>
+        <div class="table-container" id="clientsTable"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="clientModal" onclick="closeModal('clientModal')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <h3 class="modal-title" id="clientModalTitle">Fiche client</h3>
+      <button class="modal-close" onclick="closeModal('clientModal')">✕</button>
+    </div>
+    <div class="modal-body" id="clientModalBody"></div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('clientModal')">Fermer</button>
+      <button class="btn btn-primary">💾 Sauvegarder</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+<script src="js/auth.js"></script>
+<script src="js/sidebar.js"></script>
+<script src="js/clients.js"></script>
+</body>
+</html>

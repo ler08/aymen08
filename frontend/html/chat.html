@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chat - EcomSolutions</title>
+  <link rel="stylesheet" href="../css/main.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+</head>
+<body>
+  <div class="app-wrapper">
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="sidebar"></aside>
+
+    <!-- MAIN -->
+    <main class="main-content">
+      <div class="header">
+        <div class="header-left">
+          <button class="btn-sidebar" onclick="toggleSidebar()">☰</button>
+          <h1>💬 Chat</h1>
+        </div>
+      </div>
+
+      <div class="content" style="display: grid; grid-template-columns: 300px 1fr; gap: 24px; padding: 24px;">
+        <!-- CONVERSATIONS LIST -->
+        <div class="card">
+          <div class="card-header">
+            <h2>Conversations</h2>
+          </div>
+          <div id="conversationsList" style="display: flex; flex-direction: column; gap: 8px;">
+            <!-- Rempli dynamiquement -->
+          </div>
+        </div>
+
+        <!-- CHAT WINDOW -->
+        <div class="card">
+          <div class="card-header">
+            <h2 id="chatTitle">Sélectionnez une conversation</h2>
+          </div>
+          
+          <div id="messagesContainer" style="
+            height: 500px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            padding: 16px;
+            background: var(--bg-primary);
+            border-radius: var(--radius-lg);
+            margin-bottom: 16px;
+          ">
+            <!-- Messages remplis dynamiquement -->
+          </div>
+
+          <div style="display: flex; gap: 8px;">
+            <input type="text" id="messageInput" placeholder="Votre message..." style="
+              flex: 1;
+              padding: 12px;
+              border: 1px solid var(--border);
+              border-radius: var(--radius-sm);
+              background: var(--bg-primary);
+              color: var(--text-primary);
+            ">
+            <button onclick="sendMessage()" class="btn-primary" style="width: auto;">Envoyer</button>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="../js/api.js"></script>
+  <script src="../js/sidebar.js"></script>
+  <script src="../js/chat.js"></script>
+</body>
+</html>

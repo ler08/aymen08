@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Comptabilité - EcomSolutions</title>
+  <link rel="stylesheet" href="../css/main.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <link rel="stylesheet" href="../css/modals.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <div class="app-wrapper">
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="sidebar"></aside>
+
+    <!-- MAIN -->
+    <main class="main-content">
+      <!-- HEADER -->
+      <div class="header">
+        <div class="header-left">
+          <button class="btn-sidebar" onclick="toggleSidebar()">☰</button>
+          <h1>Comptabilité</h1>
+        </div>
+        <div class="header-right">
+          <button class="btn-primary" onclick="openCreateAccountingModal()">+ Nouvelle Entrée</button>
+          <button class="btn-secondary" onclick="exportCSV()">📥 CSV</button>
+          <button class="btn-secondary" onclick="exportExcel()">📊 Excel</button>
+          <button class="btn-secondary" onclick="printReport()">🖨️ Imprimer</button>
+          <div class="user-menu" id="userMenu"></div>
+        </div>
+      </div>
+
+      <!-- CONTENT -->
+      <div class="content">
+        <!-- SUMMARY CARDS -->
+        <div id="accountingSummary" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px;">
+          <!-- Rempli dynamiquement -->
+        </div>
+
+        <!-- CHART -->
+        <div class="card" style="margin-bottom: 24px;">
+          <div class="card-header">
+            <h2>Répartition</h2>
+          </div>
+          <div style="max-width: 400px; margin: 0 auto;">
+            <canvas id="accountingChart"></canvas>
+          </div>
+        </div>
+
+        <!-- TABLE -->
+        <div class="card">
+          <div class="card-header">
+            <h2>Toutes les Entrées</h2>
+            <input type="search" id="searchAccounting" placeholder="Chercher..." style="width: 250px; padding: 8px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm);">
+          </div>
+
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Description</th>
+                  <th>Catégorie</th>
+                  <th>Type</th>
+                  <th>Montant</th>
+                  <th>Facture</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- MODAL COMPTABILITÉ -->
+  <div class="modal-overlay" id="accountingModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Nouvelle Entrée Comptable</h2>
+        <button class="modal-close" onclick="closeModal('accountingModal')">✕</button>
+      </div>
+      <div class="modal-body">
+        <form class="modal-form" id="accountingForm" onsubmit="handleAccountingSubmit(event)">
+          <div class="form-row">
+            <div class="form-group">
+              <label>Type *</label>
+              <select id="accountingType" required>
+                <option value="">Sélectionner</option>
+                <option value="income">Revenu</option>
+                <option value="expense">Dépense</option>
+                <option value="tax">Taxe</option>
+                <option value="refund">Remboursement</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Catégorie</label>
+              <input type="text" id="accountingCategory" placeholder="Ventes, Matériel, etc.">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Description *</label>
+            <textarea id="accountingDescription" placeholder="Description détaillée..." required></textarea>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Montant (€) *</label>
+              <input type="number" id="accountingAmount" step="0.01" required>
+            </div>
+            <div class="form-group">
+              <label>Numéro Facture</label>
+              <input type="text" id="accountingInvoice" placeholder="FAC-001">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Notes</label>
+            <textarea id="accountingNotes" placeholder="Notes internes..."></textarea>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-cancel" onclick="closeModal('accountingModal')">Annuler</button>
+        <button class="btn-submit" onclick="document.getElementById('accountingForm').dispatchEvent(new Event('submit'))">Créer</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- STYLES CARDS -->
+  <style>
+    .stat-card {
+      background: var(--bg-card);
+      padding: 20px;
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border);
+      text-align: center;
+    }
+    .stat-label {
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+      margin-bottom: 8px;
+    }
+    .stat-value {
+      font-size: 1.8rem;
+      font-weight: 700;
+    }
+  </style>
+
+  <!-- SCRIPTS -->
+  <script src="../js/api.js"></script>
+  <script src="../js/sidebar.js"></script>
+  <script src="../js/compta.js"></script>
+</body>
+</html>

@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>UGC Studio - EcomSolutions</title>
+  <link rel="stylesheet" href="../css/main.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <link rel="stylesheet" href="../css/ugc.css">
+</head>
+<body>
+  <div class="app-wrapper">
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="sidebar"></aside>
+
+    <!-- MAIN -->
+    <main class="main-content">
+      <!-- HEADER -->
+      <div class="header">
+        <div class="header-left">
+          <button class="btn-sidebar" onclick="toggleSidebar()">☰</button>
+          <h1>🎬 UGC Studio</h1>
+        </div>
+        <div class="header-right">
+          <button class="btn-primary" onclick="saveProject()">💾 Sauvegarder</button>
+          <button class="btn-secondary" onclick="downloadAsImage()">📥 Télécharger</button>
+          <button class="btn-secondary" onclick="resetProject()">🔄 Réinitialiser</button>
+          <div class="user-menu" id="userMenu"></div>
+        </div>
+      </div>
+
+      <!-- CONTENT -->
+      <div class="content">
+        <div class="ugc-container">
+          <!-- PREVIEW -->
+          <div class="ugc-preview" id="ugcCanvas"></div>
+
+          <!-- EDITOR -->
+          <div class="ugc-editor">
+            <!-- PROJECT INFO -->
+            <div class="control-group">
+              <div class="control-group-title">📋 Projet</div>
+              <input type="text" id="projectTitle" placeholder="Titre du projet" style="width: 100%; padding: 8px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm);">
+            </div>
+
+            <!-- TEMPLATES -->
+            <div class="control-group">
+              <div class="control-group-title">🎨 Templates</div>
+              <div class="templates-grid" id="templatesGrid"></div>
+            </div>
+
+            <!-- COLORS -->
+            <div class="control-group">
+              <div class="control-group-title">🎨 Couleurs</div>
+              <div class="control-buttons">
+                <label style="display: flex; align-items: center; gap: 8px;">
+                  <span style="font-size: 0.8rem;">Fond:</span>
+                  <input type="color" id="bgColor" value="#ffffff" style="width: 40px; height: 40px; cursor: pointer;">
+                </label>
+                <label style="display: flex; align-items: center; gap: 8px;">
+                  <span style="font-size: 0.8rem;">Texte:</span>
+                  <input type="color" id="textColor" value="#000000" style="width: 40px; height: 40px; cursor: pointer;">
+                </label>
+              </div>
+            </div>
+
+            <!-- TEXT -->
+            <div class="control-group">
+              <div class="control-group-title">✍️ Texte</div>
+              <textarea id="overlayText" placeholder="Entrez votre texte..." style="width: 100%; padding: 8px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); min-height: 60px; font-family: Arial, sans-serif;"></textarea>
+
+              <div class="control-slider">
+                <label>Taille:</label>
+                <input type="range" id="fontSize" min="12" max="120" value="32">
+                <span id="fontSizeValue" style="min-width: 40px;">32</span>
+              </div>
+
+              <label style="display: block; margin-top: 8px;">
+                <span style="font-size: 0.8rem;">Police:</span>
+                <select id="fontFamily" style="width: 100%; margin-top: 4px; padding: 6px; border: 1px solid var(--border); border-radius: var(--radius-sm);">
+                  <option value="Arial">Arial</option>
+                  <option value="Georgia">Georgia</option>
+                  <option value="Courier">Courier</option>
+                  <option value="Impact">Impact</option>
+                </select>
+              </label>
+            </div>
+
+            <!-- FILTERS -->
+            <div class="control-group">
+              <div class="control-group-title">🎞️ Filtres</div>
+
+              <div class="control-slider">
+                <label>Luminosité:</label>
+                <input type="range" id="brightness" min="50" max="150" value="100">
+                <span id="brightnessValue" style="min-width: 40px;">100%</span>
+              </div>
+
+              <div class="control-slider">
+                <label>Contraste:</label>
+                <input type="range" id="contrast" min="50" max="150" value="100">
+                <span id="contrastValue" style="min-width: 40px;">100%</span>
+              </div>
+
+<div class="control-slider">
+  <label>Saturation:</label>
+  <input type="range" id="saturation" min="0" max="200" value="100">
+  <span id="saturationValue" style="min-width: 40px;">100%</span>
+</div>
+</div>
+
+<!-- MEDIA -->
+<div class="control-group">
+<div class="control-group-title">📹 Média</div>
+
+<label class="media-upload" onclick="document.getElementById('videoUpload').click()">
+  <div class="media-upload-icon">🎥</div>
+  <div class="media-upload-text">Cliquez pour ajouter une vidéo</div>
+  <input type="file" id="videoUpload" accept="video/*">
+</label>
+
+<label class="media-upload" onclick="document.getElementById('audioUpload').click()" style="margin-top: 12px;">
+  <div class="media-upload-icon">🎵</div>
+  <div class="media-upload-text">Cliquez pour ajouter de l'audio</div>
+  <input type="file" id="audioUpload" accept="audio/*">
+</label>
+
+<button class="btn-secondary" onclick="previewVideo()" style="width: 100%; margin-top: 12px;">
+  👁️ Prévisualiser
+</button>
+</div>
+
+<!-- EXPORT OPTIONS -->
+<div class="control-group">
+<div class="control-group-title">📤 Export</div>
+<div class="export-options">
+  <button class="export-option" onclick="downloadAsImage()">
+    <div class="export-option-icon">🖼️</div>
+    <div class="export-option-title">PNG</div>
+    <div class="export-option-desc">Image haute qualité</div>
+  </button>
+  <button class="export-option" onclick="downloadAsJPEG()">
+    <div class="export-option-icon">📷</div>
+    <div class="export-option-title">JPEG</div>
+    <div class="export-option-desc">Format compressé</div>
+  </button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+
+<!-- SCRIPTS -->
+<script src="../js/api.js"></script>
+<script src="../js/sidebar.js"></script>
+<script src="../js/ugc.js"></script>
+</body>
+</html>
+

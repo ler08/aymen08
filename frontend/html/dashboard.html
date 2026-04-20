@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard - EcomSolutions</title>
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/components.css">
+</head>
+<body>
+  <div class="app-layout">
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-logo">💼</div>
+        <div class="sidebar-logo-text">
+          <h2>EcomSolutions</h2>
+          <span>v2.0</span>
+        </div>
+        <div class="sidebar-toggle">❮</div>
+      </div>
+      <nav class="sidebar-nav"></nav>
+      <div class="sidebar-footer">
+        <div class="sidebar-user"></div>
+      </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="main-content">
+      <!-- TOPBAR -->
+      <header class="topbar">
+        <div class="topbar-left">
+          <h3 class="topbar-title">Dashboard</h3>
+          <p class="topbar-subtitle">Bienvenue sur votre plateforme</p>
+        </div>
+        <div class="topbar-right">
+          <button class="topbar-btn" title="Notifications">
+            🔔
+            <span class="notif-dot"></span>
+            <div class="notif-panel" data-notif>
+              <div class="notif-header">
+                <span class="notif-title">Notifications</span>
+                <button class="btn btn-sm" onclick="this.closest('.notif-panel').innerHTML = ''">Effacer</button>
+              </div>
+              <div class="notif-list">
+                <div class="notif-item unread">
+                  <div class="notif-icon" style="background: rgba(79,110,247,0.15); color: var(--accent-blue);">📦</div>
+                  <div class="notif-body">
+                    <div class="notif-text">Nouvelle commande #1245 reçue</div>
+                    <div class="notif-time">Il y a 2 minutes</div>
+                  </div>
+                </div>
+                <div class="notif-item">
+                  <div class="notif-icon" style="background: rgba(16,185,129,0.15); color: var(--accent-green);">✅</div>
+                  <div class="notif-body">
+                    <div class="notif-text">Votre rapport mensuel est prêt</div>
+                    <div class="notif-time">Il y a 1 heure</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </button>
+          <button class="topbar-btn" title="Paramètres">⚙️</button>
+          <button class="topbar-btn topbar-avatar" title="Profil" onclick="logout()">
+            <span id="user-avatar"></span>
+          </button>
+        </div>
+      </header>
+
+      <!-- PAGE CONTENT -->
+      <div class="page-container">
+        <div class="page-header">
+          <div class="page-header-left">
+            <h1>Dashboard</h1>
+            <p>Vue d'ensemble de votre activité</p>
+          </div>
+          <div class="page-header-actions">
+            <button class="btn btn-secondary" onclick="alert('Vous pouvez ici télécharger un rapport')">📥 Exporter</button>
+            <button class="btn btn-primary">📊 Rapport</button>
+          </div>
+        </div>
+
+        <!-- KPI CARDS -->
+        <div class="kpi-grid">
+          <div class="kpi-card kpi-blue">
+            <div class="kpi-header">
+              <span class="kpi-label">Revenus</span>
+              <div class="kpi-icon-wrap">💰</div>
+            </div>
+            <div class="kpi-value">12,450€</div>
+            <div class="kpi-footer">
+              <span class="kpi-trend up">↑ 12.5%</span>
+              <span class="kpi-period">Ce mois</span>
+            </div>
+          </div>
+
+          <div class="kpi-card kpi-green">
+            <div class="kpi-header">
+              <span class="kpi-label">Commandes</span>
+              <div class="kpi-icon-wrap">📦</div>
+            </div>
+            <div class="kpi-value">348</div>
+            <div class="kpi-footer">
+              <span class="kpi-trend up">↑ 8.2%</span>
+              <span class="kpi-period">Ce mois</span>
+            </div>
+          </div>
+
+          <div class="kpi-card kpi-purple">
+            <div class="kpi-header">
+              <span class="kpi-label">Clients</span>
+              <div class="kpi-icon-wrap">👥</div>
+            </div>
+            <div class="kpi-value">1,285</div>
+            <div class="kpi-footer">
+              <span class="kpi-trend up">↑ 5.1%</span>
+              <span class="kpi-period">Ce mois</span>
+            </div>
+          </div>
+
+          <div class="kpi-card kpi-orange">
+            <div class="kpi-header">
+              <span class="kpi-label">Taux Conv.</span>
+              <div class="kpi-icon-wrap">📈</div>
+            </div>
+            <div class="kpi-value">3.24%</div>
+            <div class="kpi-footer">
+              <span class="kpi-trend down">↓ 0.8%</span>
+              <span class="kpi-period">Ce mois</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- CHARTS -->
+        <div class="grid grid-2">
+          <!-- Chart 1 -->
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">📈 Revenus (30 jours)</h3>
+              <div class="tabs">
+                <button class="tab active">Jour</button>
+                <button class="tab">Semaine</button>
+                <button class="tab">Mois</button>
+              </div>
+            </div>
+            <div class="chart-placeholder">
+              <div style="width: 100%; height: 100%; display: flex; align-items: flex-end; justify-content: space-around; padding: 0 10px; gap: 8px;">
+                <div style="flex: 1; background: linear-gradient(180deg, #4f6ef7, #6b85ff); border-radius: 4px 4px 0 0; height: 40%; min-width: 6px;"></div>
+                <div style="flex: 1; background: linear-gradient(180deg, #4f6ef7, #6b85ff); border-radius: 4px 4px 0 0; height: 65%;"></div>
+                <div style="flex: 1; background: linear-gradient(180deg, #4f6ef7, #6b85ff); border-radius: 4px 4px 0 0; height: 85%;"></div>
+                <div style="flex: 1; background: linear-gradient(180deg, #4f6ef7, #6b85ff); border-radius: 4px 4px 0 0; height: 55%;"></div>
+                <div style="flex: 1; background: linear-gradient(180deg, #4f6ef7, #6b85ff); border-radius: 4px 4px 0 0; height: 92%;"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Chart 2 -->
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">🥧 Distribution par source</h3>
+            </div>
+            <div style="padding: 20px; text-align: center;">
+              <div style="width: 120px; height: 120px; margin: 0 auto 20px; background: conic-gradient(#4f6ef7 0deg 144deg, #10b981 144deg 216deg, #f59e0b 216deg 360deg); border-radius: 50%;"></div>
+              <div style="display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; font-size: 0.8rem;">
+                <div><span style="display: inline-block; width: 10px; height: 10px; background: #4f6ef7; border-radius: 2px; margin-right: 5px;"></span>Direct (40%)</div>
+                <div><span style="display: inline-block; width: 10px; height: 10px; background: #10b981; border-radius: 2px; margin-right: 5px;"></span>Organic (30%)</div>
+                <div><span style="display: inline-block; width: 10px; height: 10px; background: #f59e0b; border-radius: 2px; margin-right: 5px;"></span>Ads (30%)</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- RECENT ORDERS -->
+        <div class="card mt-20">
+          <div class="card-header">
+            <h3 class="card-title">📦 Commandes récentes</h3>
+            <button class="btn btn-sm btn-secondary">Voir tout</button>
+          </div>
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>Commande</th>
+                  <th>Client</th>
+                  <th>Montant</th>
+                  <th>Statut</th>
+                  <th>Date</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>#1245</td>
+                  <td>Sophie Martin</td>
+                  <td>184,50€</td>
+                  <td><span class="badge badge-green">✓ Livrée</span></td>
+                  <td>19 janv 2024</td>
+                </tr>
+                <tr>
+                  <td>#1244</td>
+                  <td>Jean Dubois</td>
+                  <td>92,00€</td>
+                  <td><span class="badge badge-blue">📦 Expédiée</span></td>
+                  <td>18 janv 2024</td>
+                </tr>
+                <tr>
+                  <td>#1243</td>
+                  <td>Marie Lefevre</td>
+                  <td>256,75€</td>
+                  <td><span class="badge badge-yellow">⏳ En attente</span></td>
+                  <td>17 janv 2024</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ACTIVITY FEED -->
+        <div class="grid grid-2 mt-20">
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">📋 Activité récente</h3>
+            </div>
+            <div class="activity-list">
+              <div class="activity-item">
+                <div class="activity-icon" style="background: rgba(79,110,247,0.15); color: var(--accent-blue);">📦</div>
+                <div class="activity-body">
+                  <div class="activity-title">Nouvelle commande reçue</div>
+                  <div class="activity-meta">Il y a 2 minutes • #1245</div>
+                </div>
+              </div>
+              <div class="activity-item">
+                <div class="activity-icon" style="background: rgba(16,185,129,0.15); color: var(--accent-green);">✅</div>
+                <div class="activity-body">
+                  <div class="activity-title">Commande expédiée</div>
+                  <div class="activity-meta">Il y a 1 heure • #1242</div>
+                </div>
+              </div>
+              <div class="activity-item">
+                <div class="activity-icon" style="background: rgba(245,158,11,0.15); color: var(--accent-orange);">⚠️</div>
+                <div class="activity-body">
+                  <div class="activity-title">Stock faible détecté</div>
+                  <div class="activity-meta">Il y a 3 heures • Produit #5</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">🎯 Objectifs (30 jours)</h3>
+            </div>
+            <div style="padding: 20px;">
+              <div class="stat-row">
+                <span class="stat-label">Revenus</span>
+                <span class="stat-value">12,450€ / 15,000€</span>
+              </div>
+              <div class="progress-wrap">
+                <div class="progress">
+                  <div class="progress-bar" style="width: 83%"></div>
+                </div>
+              </div>
+
+              <div class="stat-row mt-16">
+                <span class="stat-label">Commandes</span>
+                <span class="stat-value">348 / 400</span>
+              </div>
+              <div class="progress-wrap">
+                <div class="progress">
+                  <div class="progress-bar green" style="width: 87%"></div>
+                </div>
+              </div>
+
+              <div class="stat-row mt-16">
+                <span class="stat-label">Clients</span>
+                <span class="stat-value">1,285 / 1,500</span>
+              </div>
+              <div class="progress-wrap">
+                <div class="progress">
+                  <div class="progress-bar orange" style="width: 86%"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="js/auth.js"></script>
+  <script src="js/sidebar.js"></script>
+  <script>
+    const user = requireAuth();
+    if (user) {
+      document.getElementById('user-avatar').textContent = user.avatar;
+      updateTopbar('Dashboard', 'Bienvenue sur votre plateforme');
+    }
+
+    // Toggle notifications
+    document.querySelector('[title="Notifications"]').addEventListener('click', function(e) {
+      e.stopPropagation();
+      const panel = this.querySelector('.notif-panel');
+      if (panel) panel.classList.toggle('open');
+    });
+
+    document.addEventListener('click', (e) => {
+      document.querySelectorAll('.notif-panel.open').forEach(p => {
+        if (!p.closest('[title="Notifications"]')?.contains(e.target)) {
+          p.classList.remove('open');
+        }
+      });
+    });
+  </script>
+</body>
+</html>

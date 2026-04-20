@@ -1,0 +1,452 @@
+<!-- ========== MODAL: CRÉER/ÉDITER COMMANDE ========== -->
+<div class="modal-overlay" id="orderModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2 id="orderModalTitle">Nouvelle Commande</h2>
+      <button class="modal-close" onclick="closeModal('orderModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <form class="modal-form" id="orderForm" onsubmit="handleOrderSubmit(event)">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Client *</label>
+            <select id="orderClient" required>
+              <option value="">Sélectionner un client</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Statut</label>
+            <select id="orderStatus">
+              <option value="pending">En attente</option>
+              <option value="confirmed">Confirmée</option>
+              <option value="shipped">Expédiée</option>
+              <option value="delivered">Livrée</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Adresse de livraison *</label>
+          <textarea id="orderAddress" placeholder="Adresse complète" required></textarea>
+        </div>
+
+        <div class="form-group">
+          <label>Articles</label>
+          <div id="orderItems" style="border: 1px solid var(--border); padding: 12px; border-radius: var(--radius-sm);"></div>
+          <button type="button" onclick="addOrderItem()" class="btn-secondary" style="margin-top: 8px;">+ Ajouter article</button>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Montant Total (€) *</label>
+            <input type="number" id="orderTotal" step="0.01" required>
+          </div>
+          <div class="form-group">
+            <label>Statut Paiement</label>
+            <select id="orderPaymentStatus">
+              <option value="unpaid">Non payée</option>
+              <option value="paid">Payée</option>
+              <option value="refunded">Remboursée</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Notes</label>
+          <textarea id="orderNotes" placeholder="Notes internes..."></textarea>
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal('orderModal')">Annuler</button>
+      <button class="btn-submit" onclick="document.getElementById('orderForm').dispatchEvent(new Event('submit'))">
+        <span id="orderSubmitText">Créer</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== MODAL: CRÉER/ÉDITER CLIENT ========== -->
+<div class="modal-overlay" id="clientModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2 id="clientModalTitle">Nouveau Client</h2>
+      <button class="modal-close" onclick="closeModal('clientModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <form class="modal-form" id="clientForm" onsubmit="handleClientSubmit(event)">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Nom Complet *</label>
+            <input type="text" id="clientName" required>
+          </div>
+          <div class="form-group">
+            <label>Email *</label>
+            <input type="email" id="clientEmail" required>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Téléphone</label>
+            <input type="tel" id="clientPhone">
+          </div>
+          <div class="form-group">
+            <label>Entreprise</label>
+            <input type="text" id="clientCompany">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Adresse</label>
+          <textarea id="clientAddress" placeholder="Adresse complète"></textarea>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Ville</label>
+            <input type="text" id="clientCity">
+          </div>
+          <div class="form-group">
+            <label>Code Postal</label>
+            <input type="text" id="clientPostal">
+          </div>
+          <div class="form-group">
+            <label>Pays</label>
+            <input type="text" id="clientCountry">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Méthode Paiement</label>
+            <select id="clientPaymentMethod">
+              <option value="">Sélectionner</option>
+              <option value="card">Carte bancaire</option>
+              <option value="transfer">Virement</option>
+              <option value="check">Chèque</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Statut</label>
+            <select id="clientStatus">
+              <option value="active">Actif</option>
+              <option value="inactive">Inactif</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Notes</label>
+          <textarea id="clientNotes" placeholder="Notes internes..."></textarea>
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal('clientModal')">Annuler</button>
+      <button class="btn-submit" onclick="document.getElementById('clientForm').dispatchEvent(new Event('submit'))">
+        <span id="clientSubmitText">Créer</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== MODAL: CRÉER/ÉDITER PRODUIT ========== -->
+<div class="modal-overlay" id="productModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2 id="productModalTitle">Nouveau Produit</h2>
+      <button class="modal-close" onclick="closeModal('productModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <form class="modal-form" id="productForm" onsubmit="handleProductSubmit(event)">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Nom du Produit *</label>
+            <input type="text" id="productName" required>
+          </div>
+          <div class="form-group">
+            <label>SKU</label>
+            <input type="text" id="productSKU">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Description</label>
+          <textarea id="productDescription" placeholder="Description détaillée..."></textarea>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Catégorie</label>
+            <input type="text" id="productCategory">
+          </div>
+          <div class="form-group">
+            <label>Quantité en Stock *</label>
+            <input type="number" id="productQuantity" required>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Prix Vente (€) *</label>
+            <input type="number" id="productPrice" step="0.01" required>
+          </div>
+          <div class="form-group">
+            <label>Prix Coût (€)</label>
+            <input type="number" id="productCost" step="0.01">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>URL Image</label>
+          <input type="url" id="productImage">
+        </div>
+
+        <div class="form-group">
+          <label>Statut</label>
+          <select id="productStatus">
+            <option value="active">Actif</option>
+            <option value="inactive">Inactif</option>
+          </select>
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal('productModal')">Annuler</button>
+      <button class="btn-submit" onclick="document.getElementById('productForm').dispatchEvent(new Event('submit'))">
+        <span id="productSubmitText">Créer</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== MODAL: COMPTABILITÉ ========== -->
+<div class="modal-overlay" id="accountingModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>Nouvelle Entrée Comptable</h2>
+      <button class="modal-close" onclick="closeModal('accountingModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <form class="modal-form" id="accountingForm" onsubmit="handleAccountingSubmit(event)">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Type *</label>
+            <select id="accountingType" required>
+              <option value="">Sélectionner</option>
+              <option value="income">Revenu</option>
+              <option value="expense">Dépense</option>
+              <option value="tax">Taxe</option>
+              <option value="refund">Remboursement</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Catégorie</label>
+            <input type="text" id="accountingCategory" placeholder="Ventes, Matériel, etc.">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Description</label>
+          <textarea id="accountingDescription" placeholder="Détails de l'opération..."></textarea>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Montant (€) *</label>
+            <input type="number" id="accountingAmount" step="0.01" required>
+          </div>
+          <div class="form-group">
+            <label>Date *</label>
+            <input type="date" id="accountingDate" required>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Méthode Paiement</label>
+            <select id="accountingPaymentMethod">
+              <option value="">Sélectionner</option>
+              <option value="card">Carte</option>
+              <option value="transfer">Virement</option>
+              <option value="cash">Espèces</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Statut</label>
+            <select id="accountingStatus">
+              <option value="recorded">Enregistré</option>
+              <option value="pending">En attente</option>
+            </select>
+          </div>
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal('accountingModal')">Annuler</button>
+      <button class="btn-submit" onclick="document.getElementById('accountingForm').dispatchEvent(new Event('submit'))">
+        Ajouter
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== MODAL: PUBLICITÉ ========== -->
+<div class="modal-overlay" id="adModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2 id="adModalTitle">Nouvelle Publicité</h2>
+      <button class="modal-close" onclick="closeModal('adModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <form class="modal-form" id="adForm" onsubmit="handleAdSubmit(event)">
+        <div class="form-group">
+          <label>Nom de la Campagne *</label>
+          <input type="text" id="adName" required>
+        </div>
+
+        <div class="form-group">
+          <label>Description</label>
+          <textarea id="adDescription" placeholder="Description de la campagne..."></textarea>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Plateforme</label>
+            <select id="adPlatform">
+              <option value="custom">Personnalisée</option>
+              <option value="facebook">Facebook/Instagram</option>
+              <option value="google">Google Ads</option>
+              <option value="tiktok">TikTok</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Statut</label>
+            <select id="adStatus">
+              <option value="draft">Brouillon</option>
+              <option value="active">Active</option>
+              <option value="paused">En pause</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Budget (€) *</label>
+            <input type="number" id="adBudget" step="0.01" required>
+          </div>
+          <div class="form-group">
+            <label>Dépensé (€)</label>
+            <input type="number" id="adSpent" step="0.01" value="0">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Date Début</label>
+            <input type="date" id="adStartDate">
+          </div>
+          <div class="form-group">
+            <label>Date Fin</label>
+            <input type="date" id="adEndDate">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Audience Cible</label>
+          <textarea id="adTargetAudience" placeholder="Description de la cible..."></textarea>
+        </div>
+
+        <div class="form-group">
+          <label>URL Image</label>
+          <input type="url" id="adImage">
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal('adModal')">Annuler</button>
+      <button class="btn-submit" onclick="document.getElementById('adForm').dispatchEvent(new Event('submit'))">
+        <span id="adSubmitText">Créer</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== TOAST NOTIFICATIONS ========== -->
+<div id="toast-container" style="position: fixed; top: 20px; right: 20px; z-index: 2000; max-width: 400px;"></div>
+
+<script>
+// Modal functions
+function openModal(modalId) {
+  const modal = document.getElementById(modalId);
+  if (modal) {
+    modal.classList.add('show');
+    document.body.style.overflow = 'hidden';
+  }
+}
+
+function closeModal(modalId) {
+  const modal = document.getElementById(modalId);
+  if (modal) {
+    modal.classList.remove('show');
+    document.body.style.overflow = 'auto';
+    // Reset form
+    const form = modal.querySelector('form');
+    if (form) form.reset();
+  }
+}
+
+// Close modal on overlay click
+document.querySelectorAll('.modal-overlay').forEach(modal => {
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) {
+      closeModal(modal.id);
+    }
+  });
+});
+
+// Toast notifications
+function showToast(message, type = 'info', duration = 3000) {
+  const container = document.getElementById('toast-container');
+  const toast = document.createElement('div');
+  toast.style.cssText = `
+    background: ${type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : '#3b82f6'};
+    color: white;
+    padding: 16px 20px;
+    border-radius: 8px;
+    margin-bottom: 12px;
+    animation: slideInRight 0.3s ease;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    font-size: 0.95rem;
+  `;
+  toast.textContent = message;
+  container.appendChild(toast);
+
+  setTimeout(() => {
+    toast.style.animation = 'slideOutRight 0.3s ease';
+    setTimeout(() => toast.remove(), 300);
+  }, duration);
+}
+
+// Add toast animation styles
+if (!document.querySelector('style[data-toast]')) {
+  const style = document.createElement('style');
+  style.setAttribute('data-toast', '');
+  style.textContent = `
+    @keyframes slideInRight {
+      from { transform: translateX(400px); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+    @keyframes slideOutRight {
+      from { transform: translateX(0); opacity: 1; }
+      to { transform: translateX(400px); opacity: 0; }
+    }
+  `;
+  document.head.appendChild(style);
+}
+
+window.openModal = openModal;
+window.closeModal = closeModal;
+window.showToast = showToast;
+</script>
