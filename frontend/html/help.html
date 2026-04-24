@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aide & Documentation - EcomSolutions</title>
+  <link rel="stylesheet" href="/css/main.css">
+  <link rel="stylesheet" href="/css/composents.css">
+  
+</head>
+<body>
+<div class="app-layout">
+  <aside class="sidebar"></aside>
+  <main class="main-content">
+    <header class="topbar">
+      <div class="topbar-left"><h3 class="topbar-title">Aide & Documentation</h3><p class="topbar-subtitle"></p></div>
+      <div class="topbar-right">
+        <button class="topbar-btn" onclick="window.location='/help.html'" title="Aide">❓</button>
+        <button class="topbar-btn topbar-avatar" id="user-avatar-btn" onclick="logout()" title="Déconnexion"></button>
+      </div>
+    </header>
+    <div class="page-container">
+      <div class="page-header">
+        <div class="page-header-left"><h1>❓ Aide & Documentation</h1><p>Guides, FAQ et support</p></div>
+        <div class="page-header-actions">
+          <button class="btn btn-primary" onclick="window.location='/chat.html'">🤖 Assistant IA</button>
+        </div>
+      </div>
+
+      <!-- SEARCH -->
+      <div class="card mb-24" style="padding:20px;text-align:center">
+        <h2 style="margin-bottom:12px;font-size:1.2rem">Comment pouvons-nous vous aider ?</h2>
+        <div style="max-width:500px;margin:0 auto;position:relative">
+          <input type="search" id="helpSearch" class="form-control" placeholder="🔍 Rechercher dans l'aide..." oninput="searchHelp()" style="padding-left:16px">
+        </div>
+      </div>
+
+      <!-- QUICK LINKS -->
+      <div class="grid grid-4 mb-24" id="quick-links">
+        <a href="/dashboard.html" class="card" style="text-align:center;cursor:pointer;text-decoration:none;transition:all .2s" onmouseover="this.style.borderColor='#4f6ef7'" onmouseout="this.style.borderColor=''"><div style="font-size:1.8rem;margin-bottom:8px">📊</div><div style="font-weight:700;font-size:.9rem">Dashboard</div></a>
+        <a href="/compta.html" class="card" style="text-align:center;cursor:pointer;text-decoration:none;transition:all .2s" onmouseover="this.style.borderColor='#10b981'" onmouseout="this.style.borderColor=''"><div style="font-size:1.8rem;margin-bottom:8px">💰</div><div style="font-weight:700;font-size:.9rem">Comptabilité</div></a>
+        <a href="/ads.html" class="card" style="text-align:center;cursor:pointer;text-decoration:none;transition:all .2s" onmouseover="this.style.borderColor='#8b5cf6'" onmouseout="this.style.borderColor=''"><div style="font-size:1.8rem;margin-bottom:8px">📣</div><div style="font-weight:700;font-size:.9rem">Publicités</div></a>
+        <a href="/chat.html" class="card" style="text-align:center;cursor:pointer;text-decoration:none;transition:all .2s" onmouseover="this.style.borderColor='#06b6d4'" onmouseout="this.style.borderColor=''"><div style="font-size:1.8rem;margin-bottom:8px">🤖</div><div style="font-weight:700;font-size:.9rem">Assistant IA</div></a>
+      </div>
+
+      <!-- FAQ -->
+      <div class="card mb-24">
+        <div class="card-header"><h3 class="card-title">❓ Questions fréquentes</h3></div>
+        <div id="faq-container" style="padding:0 8px"></div>
+      </div>
+
+      <!-- GEMINI CONFIG -->
+      <div class="card mb-24">
+        <div class="card-header"><h3 class="card-title">🤖 Configuration IA Gemini</h3></div>
+        <div style="padding:8px 0">
+          <p style="color:#a0a0b8;font-size:.88rem;margin-bottom:16px">Configurez votre clé API Gemini (gratuit) pour activer l'assistant IA.</p>
+          <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap">
+            <div class="form-group" style="flex:1;min-width:250px;margin-bottom:0">
+              <label class="form-label">Clé API Gemini</label>
+              <input type="password" id="gemini-key-input" class="form-control" placeholder="AIza..." value="">
+            </div>
+            <button class="btn btn-primary" onclick="saveGeminiKey()">💾 Sauvegarder</button>
+            <button class="btn btn-secondary" onclick="testGemini()">🧪 Tester</button>
+          </div>
+          <p style="font-size:.78rem;color:#5a5a78;margin-top:10px">
+            Obtenez une clé gratuite sur <strong style="color:#4f6ef7">ai.google.dev</strong> → Google AI Studio → Créer une clé API
+          </p>
+        </div>
+      </div>
+
+      <!-- CONTACT -->
+      <div class="card">
+        <div class="card-header"><h3 class="card-title">📧 Contactez le support</h3></div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;padding:8px 0">
+          <div style="padding:16px;background:var(--bg-secondary);border-radius:10px;text-align:center">
+            <div style="font-size:1.5rem;margin-bottom:8px">📧</div>
+            <div style="font-weight:700;margin-bottom:4px">Email</div>
+            <div style="font-size:.83rem;color:#a0a0b8">support@ecomsolutions.fr</div>
+          </div>
+          <div style="padding:16px;background:var(--bg-secondary);border-radius:10px;text-align:center">
+            <div style="font-size:1.5rem;margin-bottom:8px">💬</div>
+            <div style="font-weight:700;margin-bottom:4px">Live Chat IA</div>
+            <div style="font-size:.83rem;color:#a0a0b8"><a href="/chat.html" style="color:#4f6ef7">Ouvrir le chat →</a></div>
+          </div>
+          <div style="padding:16px;background:var(--bg-secondary);border-radius:10px;text-align:center">
+            <div style="font-size:1.5rem;margin-bottom:8px">📚</div>
+            <div style="font-weight:700;margin-bottom:4px">Documentation</div>
+            <div style="font-size:.83rem;color:#a0a0b8">Guides complets disponibles</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+<div id="toast-container" class="toast-container"></div>
+<script src="/js/auth.js"></script>
+<script src="/js/api.js"></script>
+<script src="/js/sidebar.js"></script>
+<script src="/js/gemini.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  requireAuth();
+  renderFAQ();
+  const saved = localStorage.getItem('gemini_api_key');
+  if (saved) document.getElementById('gemini-key-input').value = saved;
+});
+
+const FAQ = [
+  {q:'Comment ajouter une entrée comptable ?',a:'Allez dans Comptabilité → cliquez "+ Nouvelle Entrée" → remplissez le formulaire avec le type (revenu/dépense), la description et le montant.'},
+  {q:'Comment télécharger une facture PDF ?',a:'Dans Comptabilité, chaque entrée avec un N° de facture peut générer un PDF. Le backend (Render) doit être actif pour la génération PDF.'},
+  {q:'Pourquoi les données ne se chargent-elles pas ?',a:'Le backend est hébergé sur Render (free tier) qui se met en veille après 15 minutes d\'inactivité. La première requête peut prendre 30-60 secondes le temps du réveil.'},
+  {q:'Comment configurer Gemini AI ?',a:'Créez une clé API gratuite sur ai.google.dev → Google AI Studio → "Créer une clé API". Collez-la dans la section "Configuration IA Gemini" de cette page.'},
+  {q:'Comment créer une campagne publicitaire ?',a:'Allez dans Publicités → "+ Nouvelle Campagne" → choisissez la plateforme (Facebook, Google, TikTok...), définissez le budget et l\'audience cible.'},
+  {q:'Comment utiliser UGC Studio ?',a:'Dans UGC Studio, choisissez un template ou personnalisez le fond/texte/couleurs. Exportez en PNG ou JPEG pour utiliser dans vos publicités.'},
+  {q:'Qu\'est-ce que le plan Pro offre de plus ?',a:'Le plan Pro inclut Gestionnaire Publicités, UGC Studio, Gestion Fournisseurs, Rapports avancés et l\'IA Gemini illimitée. Starter couvre Dashboard, Commandes, Stock et Comptabilité de base.'},
+  {q:'Comment exporter mes données ?',a:'Chaque module a un bouton "Exporter" ou "CSV". La Comptabilité exporte en CSV et imprime un rapport. Les Rapports génèrent un PDF imprimable.'},
+];
+
+function renderFAQ(filter='') {
+  const el = document.getElementById('faq-container');
+  if (!el) return;
+  const items = FAQ.filter(f=>!filter||f.q.toLowerCase().includes(filter)||f.a.toLowerCase().includes(filter));
+  if (!items.length) { el.innerHTML='<div style="text-align:center;padding:24px;color:#5a5a78">Aucun résultat</div>'; return; }
+  el.innerHTML = items.map((f,i)=>`
+    <div style="border-bottom:1px solid var(--border);padding:0" id="faq-${i}">
+      <button onclick="toggleFAQ(${i})" style="width:100%;display:flex;justify-content:space-between;align-items:center;padding:16px;background:none;border:none;color:var(--text-primary);font-size:.9rem;font-weight:600;cursor:pointer;text-align:left;font-family:inherit">
+        ${f.q} <span id="faq-arrow-${i}" style="font-size:.8rem;color:#5a5a78;flex-shrink:0;margin-left:12px;transition:transform .2s">▼</span>
+      </button>
+      <div id="faq-body-${i}" style="display:none;padding:0 16px 16px;font-size:.87rem;color:#a0a0b8;line-height:1.7">${f.a}</div>
+    </div>`).join('');
+}
+function toggleFAQ(i) {
+  const body=document.getElementById('faq-body-'+i);
+  const arrow=document.getElementById('faq-arrow-'+i);
+  if(!body)return;
+  const open=body.style.display==='none';
+  body.style.display=open?'block':'none';
+  if(arrow)arrow.style.transform=open?'rotate(180deg)':'';
+}
+function searchHelp() {
+  const q=document.getElementById('helpSearch')?.value.toLowerCase()||'';
+  renderFAQ(q);
+}
+function saveGeminiKey() {
+  const key=document.getElementById('gemini-key-input')?.value.trim();
+  if(!key){showToast('Entrez une clé API','warning');return;}
+  localStorage.setItem('gemini_api_key',key);
+  showToast('Clé API Gemini sauvegardée ✅','success');
+}
+async function testGemini() {
+  const key=localStorage.getItem('gemini_api_key');
+  if(!key){showToast('Configurez d\'abord votre clé API','warning');return;}
+  showToast('Test en cours...','info');
+  try {
+    const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`,{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({contents:[{parts:[{text:'Réponds juste "OK" en un mot.'}]}]})
+    });
+    if(res.ok){showToast('✅ Gemini fonctionne correctement !','success');}
+    else{const e=await res.json();showToast('❌ Erreur: '+e.error?.message,'error');}
+  } catch(e){showToast('❌ Erreur connexion','error');}
+}
+window.toggleFAQ=toggleFAQ;window.searchHelp=searchHelp;
+window.saveGeminiKey=saveGeminiKey;window.testGemini=testGemini;
+</script>
+<script>(function(){const u=requireAuth();if(u){const b=document.getElementById('user-avatar-btn');if(b)b.textContent=u.avatar;}})();</script>
+</body>
+</html>

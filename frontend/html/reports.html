@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rapports - EcomSolutions</title>
+  <link rel="stylesheet" href="/css/main.css">
+  <link rel="stylesheet" href="/css/composents.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+<div class="app-layout">
+  <aside class="sidebar"></aside>
+  <main class="main-content">
+    <header class="topbar">
+      <div class="topbar-left"><h3 class="topbar-title">Rapports</h3><p class="topbar-subtitle"></p></div>
+      <div class="topbar-right">
+        <button class="topbar-btn" onclick="window.location='/help.html'" title="Aide">❓</button>
+        <button class="topbar-btn topbar-avatar" id="user-avatar-btn" onclick="logout()" title="Déconnexion"></button>
+      </div>
+    </header>
+    <div class="page-container">
+      <div class="page-header">
+        <div class="page-header-left"><h1>📊 Rapports</h1><p>Analyses et statistiques détaillées</p></div>
+        <div class="page-header-actions">
+          <select id="reportPeriod" class="form-control form-control-sm" onchange="loadReports()" style="width:140px">
+            <option value="7">7 derniers jours</option>
+            <option value="30" selected>30 derniers jours</option>
+            <option value="90">90 derniers jours</option>
+            <option value="365">Cette année</option>
+          </select>
+          <button class="btn btn-secondary" onclick="downloadReportPDF()">📥 PDF</button>
+          <button class="btn btn-primary" onclick="downloadReportCSV()">📊 CSV</button>
+        </div>
+      </div>
+
+      <!-- KPI ROW -->
+      <div class="grid grid-4 mb-24" id="report-kpis"></div>
+
+      <!-- CHARTS -->
+      <div class="grid grid-2 mb-24">
+        <div class="card">
+          <div class="card-header"><h3 class="card-title">📈 Évolution des revenus</h3></div>
+          <div style="height:240px"><canvas id="revChart"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="card-header"><h3 class="card-title">📦 Commandes par statut</h3></div>
+          <div style="height:240px;display:flex;align-items:center;justify-content:center"><canvas id="ordChart" style="max-height:230px"></canvas></div>
+        </div>
+      </div>
+
+      <div class="grid grid-2 mb-24">
+        <div class="card">
+          <div class="card-header"><h3 class="card-title">🏆 Top Produits</h3></div>
+          <div class="table-scroll">
+            <table>
+              <thead><tr><th>#</th><th>Produit</th><th>Ventes</th><th>Revenus</th></tr></thead>
+              <tbody id="top-products"></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><h3 class="card-title">📣 Performance Publicités</h3></div>
+          <div class="table-scroll">
+            <table>
+              <thead><tr><th>Campagne</th><th>Clics</th><th>CTR</th><th>ROAS</th></tr></thead>
+              <tbody id="ads-perf"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ACCOUNTING SUMMARY -->
+      <div class="card mb-24">
+        <div class="card-header">
+          <h3 class="card-title">💰 Résumé Comptable</h3>
+          <button class="btn btn-sm btn-secondary" onclick="window.location='/compta.html'">Voir comptabilité →</button>
+        </div>
+        <div class="grid grid-4" id="report-accounting" style="padding:8px 0"></div>
+      </div>
+    </div>
+  </main>
+</div>
+<div id="toast-container" class="toast-container"></div>
+<script src="/js/auth.js"></script>
+<script src="/js/api.js"></script>
+<script src="/js/sidebar.js"></script>
+<script src="/js/reports.js"></script>
+<script>(function(){const u=requireAuth();if(u){const b=document.getElementById('user-avatar-btn');if(b)b.textContent=u.avatar;}})();</script>
+</body>
+</html>

@@ -2,148 +2,111 @@ let currentAccountingId = null;
 let accountingData = [];
 
 document.addEventListener('DOMContentLoaded', async () => {
-  if (!checkAuth()) return;
+  const user = requireAuth();
+  if (!user) return;
   await loadAccounting();
-  setupCharts();
 });
 
-// CHARGER COMPTABILITÉ
 async function loadAccounting() {
   try {
-    showLoading();
+    showLoadingTable(7);
     const data = await getAccounting();
     accountingData = data;
     renderAccounting(data);
     updateAccountingSummary(data);
-  } catch (error) {
-    showToast('Erreur lors du chargement de la comptabilité', 'error');
+    setupChart();
+  } catch (err) {
+    showToast('Erreur chargement comptabilité', 'error');
+    renderAccounting([]);
   }
 }
 
-// AFFICHER TABLEAU
 function renderAccounting(data) {
-  const tbody = document.querySelector('table tbody');
+  const tbody = document.querySelector('#accounting-table tbody');
   if (!tbody) return;
-
-  if (data.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:40px;">Aucune entrée comptable</td></tr>';
-    hideLoading();
+  if (!data.length) {
+    tbody.innerHTML = `<tr><td colspan="7" class="table-empty"><div class="table-empty-icon">💰</div><div class="table-empty-text">Aucune entrée comptable</div></td></tr>`;
     return;
   }
-
-  tbody.innerHTML = data.map(entry => `
+  tbody.innerHTML = data.map(e => `
     <tr>
-      <td>${new Date(entry.created_at).toLocaleDateString('fr-FR')}</td>
-      <td><strong>${entry.description}</strong></td>
-      <td>${entry.category || '-'}</td>
-      <td><span class="status-badge status-${entry.type}">${formatType(entry.type)}</span></td>
-      <td style="text-align: right; font-weight: 600; color: ${entry.type === 'income' || entry.type === 'refund' ? '#10b981' : '#ef4444'}">
-        ${entry.type === 'income' || entry.type === 'refund' ? '+' : '-'}€${Math.abs(entry.amount).toFixed(2)}
-      </td>
-      <td>${entry.invoice_number || '-'}</td>
+      <td>${new Date(e.created_at).toLocaleDateString('fr-FR')}</td>
+      <td><strong>${e.description}</strong></td>
+      <td>${e.category || '—'}</td>
+      <td><span class="badge ${typeBadge(e.type)}">${formatType(e.type)}</span></td>
+      <td style="text-align:right;font-weight:700;color:${['income','refund'].includes(e.type)?'#10b981':'#ef4444'}">
+        ${['income','refund'].includes(e.type)?'+':'−'}€${Math.abs(e.amount).toFixed(2)}</td>
+      <td>${e.invoice_number || '—'}</td>
       <td>
-        <button class="btn-icon" onclick="editAccounting('${entry.id}', ${JSON.stringify(entry).replace(/'/g, '&quot;')})" title="Éditer">✏️</button>
-        <button class="btn-icon btn-danger" onclick="deleteAccountingConfirm('${entry.id}')" title="Supprimer">🗑️</button>
+        <button class="btn btn-sm btn-secondary" onclick="editAccounting('${e.id}',${JSON.stringify(e).replace(/'/g,"&apos;")})">✏️</button>
+        <button class="btn btn-sm btn-danger" onclick="deleteAccountingEntry('${e.id}')">🗑️</button>
       </td>
-    </tr>
-  `).join('');
-
-  hideLoading();
+    </tr>`).join('');
 }
 
-// RÉSUMÉ COMPTABLE
+function typeBadge(t) {
+  return { income:'badge-green', expense:'badge-red', tax:'badge-orange', refund:'badge-blue' }[t] || 'badge-gray';
+}
+function formatType(t) {
+  return { income:'Revenu', expense:'Dépense', tax:'Taxe', refund:'Remboursement' }[t] || t;
+}
+
 function updateAccountingSummary(data) {
-  const income = data.filter(d => d.type === 'income').reduce((sum, d) => sum + d.amount, 0);
-  const expenses = data.filter(d => d.type === 'expense').reduce((sum, d) => sum + d.amount, 0);
-  const taxes = data.filter(d => d.type === 'tax').reduce((sum, d) => sum + d.amount, 0);
-  const refunds = data.filter(d => d.type === 'refund').reduce((sum, d) => sum + d.amount, 0);
-  const net = income - expenses - taxes + refunds;
-
-  const summary = document.getElementById('accountingSummary');
-  if (summary) {
-    summary.innerHTML = `
-      <div class="stat-card">
-        <div class="stat-label">Revenus</div>
-        <div class="stat-value" style="color: #10b981;">€${income.toFixed(2)}</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">Dépenses</div>
-        <div class="stat-value" style="color: #ef4444;">€${expenses.toFixed(2)}</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">Taxes</div>
-        <div class="stat-value" style="color: #f59e0b;">€${taxes.toFixed(2)}</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">Remboursements</div>
-        <div class="stat-value" style="color: #06b6d4;">€${refunds.toFixed(2)}</div>
-      </div>
-      <div class="stat-card" style="background: var(--gradient-blue); color: white;">
-        <div class="stat-label">Bénéfice Net</div>
-        <div class="stat-value">€${net.toFixed(2)}</div>
-      </div>
-    `;
-  }
+  const sum = (type) => data.filter(d=>d.type===type).reduce((s,d)=>s+d.amount,0);
+  const income=sum('income'), expense=sum('expense'), tax=sum('tax'), refund=sum('refund');
+  const net = income - expense - tax + refund;
+  const el = document.getElementById('accountingSummary');
+  if (!el) return;
+  el.innerHTML = [
+    {l:'Revenus',v:`€${income.toFixed(2)}`,c:'#10b981'},
+    {l:'Dépenses',v:`€${expense.toFixed(2)}`,c:'#ef4444'},
+    {l:'Taxes',v:`€${tax.toFixed(2)}`,c:'#f59e0b'},
+    {l:'Remboursements',v:`€${refund.toFixed(2)}`,c:'#06b6d4'},
+    {l:'Bénéfice Net',v:`€${net.toFixed(2)}`,c:net>=0?'#10b981':'#ef4444',bold:true}
+  ].map(s=>`
+    <div class="kpi-card" style="${s.bold?'border-color:rgba(79,110,247,0.3);background:rgba(79,110,247,0.05)':''}">
+      <div class="kpi-label">${s.l}</div>
+      <div class="kpi-value" style="color:${s.c};font-size:1.5rem;">${s.v}</div>
+    </div>`).join('');
 }
 
-// SETUP CHARTS
-function setupCharts() {
+function setupChart() {
   const ctx = document.getElementById('accountingChart');
-  if (!ctx) return;
-
-  const income = accountingData.filter(d => d.type === 'income').reduce((sum, d) => sum + d.amount, 0);
-  const expenses = accountingData.filter(d => d.type === 'expense').reduce((sum, d) => sum + d.amount, 0);
-  const taxes = accountingData.filter(d => d.type === 'tax').reduce((sum, d) => sum + d.amount, 0);
-
-  const chart = new Chart(ctx, {
+  if (!ctx || !window.Chart) return;
+  const sum = (type) => accountingData.filter(d=>d.type===type).reduce((s,d)=>s+d.amount,0);
+  if (ctx._chart) ctx._chart.destroy();
+  ctx._chart = new Chart(ctx, {
     type: 'doughnut',
     data: {
-      labels: ['Revenus', 'Dépenses', 'Taxes'],
-      datasets: [{
-        data: [income, expenses, taxes],
-        backgroundColor: ['#10b981', '#ef4444', '#f59e0b'],
-        borderColor: 'var(--bg-card)',
-        borderWidth: 2
-      }]
+      labels: ['Revenus','Dépenses','Taxes'],
+      datasets: [{ data: [sum('income'),sum('expense'),sum('tax')],
+        backgroundColor: ['#10b981','#ef4444','#f59e0b'],
+        borderColor: '#16161f', borderWidth: 3 }]
     },
-    options: {
-      responsive: true,
-      maintainAspectRatio: true,
-      plugins: {
-        legend: {
-          position: 'bottom',
-          labels: { color: 'var(--text-primary)' }
-        }
-      }
-    }
+    options: { responsive:true, plugins: { legend: { position:'bottom', labels:{color:'#a0a0b8',padding:16} } } }
   });
 }
 
-// OUVRIR MODAL CRÉATION
 function openCreateAccountingModal() {
   currentAccountingId = null;
-  document.getElementById('accountingForm').reset();
+  document.getElementById('accountingForm')?.reset();
+  document.querySelector('#accountingModal .modal-title').textContent = 'Nouvelle Entrée';
   openModal('accountingModal');
 }
-
-// OUVRIR MODAL ÉDITION
-function editAccounting(accountingId, entry) {
-  currentAccountingId = accountingId;
-  
-  document.getElementById('accountingType').value = entry.type;
+function editAccounting(id, entry) {
+  currentAccountingId = id;
+  document.getElementById('accountingType').value = entry.type || '';
   document.getElementById('accountingCategory').value = entry.category || '';
   document.getElementById('accountingDescription').value = entry.description || '';
   document.getElementById('accountingAmount').value = entry.amount || '';
   document.getElementById('accountingInvoice').value = entry.invoice_number || '';
   document.getElementById('accountingNotes').value = entry.notes || '';
-
+  document.querySelector('#accountingModal .modal-title').textContent = 'Modifier Entrée';
   openModal('accountingModal');
 }
 
-// SOUMETTRE FORMULAIRE
-async function handleAccountingSubmit(event) {
-  event.preventDefault();
-
+async function handleAccountingSubmit(e) {
+  e.preventDefault();
   const data = {
     type: document.getElementById('accountingType').value,
     category: document.getElementById('accountingCategory').value,
@@ -152,176 +115,80 @@ async function handleAccountingSubmit(event) {
     invoice_number: document.getElementById('accountingInvoice').value,
     notes: document.getElementById('accountingNotes').value
   };
-
   try {
-    if (currentAccountingId) {
+    if (currentAccountingId)
       await apiCall(`/accounting/${currentAccountingId}`, 'PATCH', data);
-      showToast('Entrée mise à jour ✅', 'success');
-    } else {
+    else
       await createAccountingEntry(data);
-      showToast('Entrée créée ✅', 'success');
-    }
-
+    showToast(currentAccountingId ? 'Entrée mise à jour ✅' : 'Entrée créée ✅', 'success');
     closeModal('accountingModal');
     await loadAccounting();
-  } catch (error) {
-    showToast(`Erreur: ${error.message}`, 'error');
-  }
+  } catch (err) { showToast(`Erreur: ${err.message}`, 'error'); }
 }
 
-// SUPPRIMER ENTRÉE
-async function deleteAccountingConfirm(accountingId) {
-  if (confirm('Êtes-vous sûr de vouloir supprimer cette entrée?')) {
-    try {
-      await apiCall(`/accounting/${accountingId}`, 'DELETE');
-      showToast('Entrée supprimée ✅', 'success');
-      await loadAccounting();
-    } catch (error) {
-      showToast(`Erreur: ${error.message}`, 'error');
-    }
-  }
+async function deleteAccountingEntry(id) {
+  if (!confirm('Supprimer cette entrée ?')) return;
+  try {
+    await apiCall(`/accounting/${id}`, 'DELETE');
+    showToast('Entrée supprimée', 'success');
+    await loadAccounting();
+  } catch(err) { showToast(`Erreur: ${err.message}`, 'error'); }
 }
 
-// EXPORTER EN CSV
 function exportCSV() {
-  const headers = ['Date', 'Description', 'Catégorie', 'Type', 'Montant', 'Numéro Facture'];
+  const headers = ['Date','Description','Catégorie','Type','Montant','Facture'];
   const rows = accountingData.map(d => [
     new Date(d.created_at).toLocaleDateString('fr-FR'),
-    d.description,
-    d.category || '',
-    formatType(d.type),
-    d.amount,
-    d.invoice_number || ''
+    `"${d.description}"`, d.category||'', formatType(d.type), d.amount, d.invoice_number||''
   ]);
-
-  const csv = [headers, ...rows]
-    .map(row => row.map(cell => `"${cell}"`).join(','))
-    .join('\n');
-
-  const blob = new Blob([csv], { type: 'text/csv' });
-  const url = window.URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `comptabilite-${new Date().toISOString().split('T')[0]}.csv`;
-  a.click();
-  window.URL.revokeObjectURL(url);
-  showToast('Fichier CSV téléchargé ✅', 'success');
+  const csv = [headers, ...rows].map(r=>r.join(',')).join('\n');
+  const blob = new Blob(['\uFEFF'+csv], {type:'text/csv;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href=url; a.download=`compta-${new Date().toISOString().split('T')[0]}.csv`;
+  a.click(); URL.revokeObjectURL(url);
+  showToast('CSV téléchargé ✅', 'success');
 }
 
-// EXPORTER EN EXCEL
-async function exportExcel() {
-  try {
-    await exportAccountingExcel();
-    showToast('Fichier Excel téléchargé ✅', 'success');
-  } catch (error) {
-    showToast(`Erreur: ${error.message}`, 'error');
-  }
-}
-
-// IMPRIMER RAPPORT
 function printReport() {
-  const income = accountingData.filter(d => d.type === 'income').reduce((sum, d) => sum + d.amount, 0);
-  const expenses = accountingData.filter(d => d.type === 'expense').reduce((sum, d) => sum + d.amount, 0);
-  const taxes = accountingData.filter(d => d.type === 'tax').reduce((sum, d) => sum + d.amount, 0);
-  const net = income - expenses - taxes;
-
-  const printWindow = window.open('', '', 'width=800, height=600');
-  printWindow.document.write(`
-    <html>
-      <head>
-        <title>Rapport Comptable</title>
-        <style>
-          body { font-family: Arial; margin: 40px; }
-          h1 { text-align: center; }
-          table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-          th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
-          th { background: #f5f5f5; }
-          .summary { margin-top: 30px; }
-          .summary-item { display: flex; justify-content: space-between; margin: 10px 0; font-size: 16px; }
-          .total { font-weight: bold; font-size: 18px; margin-top: 20px; }
-        </style>
-      </head>
-      <body>
-        <h1>Rapport Comptable - ${new Date().toLocaleDateString('fr-FR')}</h1>
-        
-        <table>
-          <thead>
-            <tr>
-              <th>Date</th>
-              <th>Description</th>
-              <th>Type</th>
-              <th>Montant</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${accountingData.map(d => `
-              <tr>
-                <td>${new Date(d.created_at).toLocaleDateString('fr-FR')}</td>
-                <td>${d.description}</td>
-                <td>${formatType(d.type)}</td>
-                <td>€${d.amount.toFixed(2)}</td>
-              </tr>
-            `).join('')}
-          </tbody>
-        </table>
-
-        <div class="summary">
-          <div class="summary-item">
-            <span>Revenus:</span>
-            <strong>€${income.toFixed(2)}</strong>
-          </div>
-          <div class="summary-item">
-            <span>Dépenses:</span>
-            <strong>€${expenses.toFixed(2)}</strong>
-          </div>
-          <div class="summary-item">
-            <span>Taxes:</span>
-            <strong>€${taxes.toFixed(2)}</strong>
-          </div>
-          <div class="summary-item total">
-            <span>Bénéfice Net:</span>
-            <strong>€${net.toFixed(2)}</strong>
-          </div>
-        </div>
-      </body>
-    </html>
-  `);
-  printWindow.document.close();
-  printWindow.print();
+  const sum = (t) => accountingData.filter(d=>d.type===t).reduce((s,d)=>s+d.amount,0);
+  const income=sum('income'), expense=sum('expense'), tax=sum('tax');
+  const w = window.open('','_blank','width=800,height=600');
+  w.document.write(`<!DOCTYPE html><html><head><title>Rapport Comptable</title>
+  <style>body{font-family:Arial,sans-serif;margin:40px;color:#1a1a1a}
+  h1{text-align:center;margin-bottom:30px}
+  table{width:100%;border-collapse:collapse}
+  th,td{border:1px solid #ddd;padding:10px;text-align:left}
+  th{background:#f5f7fa;font-weight:700}
+  .summary{margin-top:30px;border:1px solid #ddd;padding:20px;border-radius:8px}
+  .row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #eee}
+  .total{font-weight:700;font-size:1.1em;border-bottom:none;margin-top:8px}
+  @media print{button{display:none}}</style></head><body>
+  <h1>Rapport Comptable — ${new Date().toLocaleDateString('fr-FR')}</h1>
+  <button onclick="window.print()" style="padding:10px 20px;margin-bottom:20px;background:#4f6ef7;color:#fff;border:none;border-radius:6px;cursor:pointer;">🖨️ Imprimer</button>
+  <table><thead><tr><th>Date</th><th>Description</th><th>Type</th><th>Montant</th></tr></thead>
+  <tbody>${accountingData.map(d=>`<tr><td>${new Date(d.created_at).toLocaleDateString('fr-FR')}</td><td>${d.description}</td><td>${formatType(d.type)}</td><td>€${d.amount.toFixed(2)}</td></tr>`).join('')}</tbody></table>
+  <div class="summary">
+    <div class="row"><span>Revenus</span><strong>€${income.toFixed(2)}</strong></div>
+    <div class="row"><span>Dépenses</span><strong>€${expense.toFixed(2)}</strong></div>
+    <div class="row"><span>Taxes</span><strong>€${tax.toFixed(2)}</strong></div>
+    <div class="row total"><span>Bénéfice Net</span><strong>€${(income-expense-tax).toFixed(2)}</strong></div>
+  </div></body></html>`);
+  w.document.close();
 }
 
-// FONCTIONS UTILITAIRES
-function formatType(type) {
-  const types = {
-    'income': 'Revenu',
-    'expense': 'Dépense',
-    'tax': 'Taxe',
-    'refund': 'Remboursement'
-  };
-  return types[type] || type;
+function showLoadingTable(cols) {
+  const tbody = document.querySelector('#accounting-table tbody');
+  if (tbody) tbody.innerHTML = `<tr><td colspan="${cols}" style="text-align:center;padding:40px;"><div class="spinner"></div></td></tr>`;
 }
 
-function checkAuth() {
-  const user = JSON.parse(localStorage.getItem('user') || '{}');
-  if (!user.id) {
-    window.location.href = '/';
-    return false;
-  }
-  return true;
-}
+// Search
+document.addEventListener('DOMContentLoaded', () => {
+  const search = document.getElementById('searchAccounting');
+  if (search) search.addEventListener('input', e => {
+    const q = e.target.value.toLowerCase();
+    renderAccounting(accountingData.filter(d => d.description?.toLowerCase().includes(q) || d.category?.toLowerCase().includes(q)));
+  });
+});
 
-function showLoading() {
-  const tbody = document.querySelector('table tbody');
-  if (tbody) tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;"><div class="spinner"></div></td></tr>';
-}
-
-function hideLoading() {}
-
-// EXPORT
-window.openCreateAccountingModal = openCreateAccountingModal;
-window.editAccounting = editAccounting;
-window.handleAccountingSubmit = handleAccountingSubmit;
-window.deleteAccountingConfirm = deleteAccountingConfirm;
-window.exportCSV = exportCSV;
-window.exportExcel = exportExcel;
-window.printReport = printReport;
+Object.assign(window, { openCreateAccountingModal, editAccounting, handleAccountingSubmit,
+  deleteAccountingEntry, exportCSV, printReport });
