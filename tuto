@@ -1,0 +1,288 @@
+✅ GUIDE COMPLET — VERCEL + RENDER + SUPABASE + PERSONNALISATION
+1. VERCEL — Configuration frontend
+Connexion & import du repo :
+
+Allez sur vercel.com → New Project → Import Git Repository
+Sélectionnez LeR08/aymen08
+Branch à déployer : main (ou claude/add-homepage-XzkAd après merge)
+Réglages Build :
+
+Paramètre	Valeur
+Framework Preset	Other
+Root Directory	. (laisser vide)
+Build Command	(laisser vide — site statique)
+Output Directory	frontend
+Install Command	(laisser vide)
+Variables d'environnement Vercel : (aucune requise — tout est côté client)
+
+Domaine personnalisé :
+
+Settings → Domains → Add → entrez votre domaine
+Configurez le CNAME chez votre registrar : cname.vercel-dns.com
+Vérification : Après deploy, testez :
+
+/ → page d'accueil (landing)
+/login → page connexion
+/dashboard → redirect vers login si non connecté ✓
+/compta, /ads, /ugc, /reports, /suppliers, /help → toutes accessibles ✓
+2. RENDER — Configuration backend
+Créer le service :
+
+render.com → New → Web Service
+Connect repo LeR08/aymen08
+Sélectionnez le dossier backend comme Root Directory
+Réglages du service :
+
+Paramètre	Valeur
+Runtime	Node
+Build Command	npm install
+Start Command	node server.js (ou npm start)
+Instance Type	Free (ou Starter $7/mois pour pas de sleep)
+Variables d'environnement Render obligatoires :
+
+NODE_ENV=production
+PORT=10000
+DATABASE_URL=postgresql://...    ← depuis Supabase (voir section 3)
+JWT_SECRET=votre_secret_jwt_32chars_minimum
+FRONTEND_URL=https://votre-domaine.vercel.app
+Variables optionnelles :
+
+GEMINI_API_KEY=AIza...           ← si vous voulez le backend utiliser Gemini
+CORS_ORIGINS=https://votre-domaine.vercel.app
+Note importante : Le plan Free de Render met le service en veille après 15 min d'inactivité. La première requête prend 30-60 secondes pour "réveiller" le backend. Mettez à jour frontend/js/api.js ligne 2 avec votre URL Render :
+
+const API_URL = 'https://VOTRE-SERVICE.onrender.com/api';
+3. SUPABASE — Configuration base de données
+Créer le projet :
+
+supabase.com → New Project
+Choisissez une région proche (Europe West pour la France)
+Notez le mot de passe de la BDD — vous ne pouvez pas le récupérer après
+Récupérer la DATABASE_URL :
+
+Settings → Database → Connection String → URI
+Remplacez [YOUR-PASSWORD] par votre mot de passe
+Tables SQL à créer (SQL Editor → New Query) :
+
+-- Users (géré par auth.js en localStorage pour le moment)
+-- Si vous voulez migrer vers Supabase Auth, ajoutez :
+
+CREATE TABLE orders (
+  id SERIAL PRIMARY KEY,
+  order_number VARCHAR(20) UNIQUE,
+  client_name VARCHAR(100),
+  total_amount DECIMAL(10,2),
+  status VARCHAR(20) DEFAULT 'pending',
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE clients (
+  id SERIAL PRIMARY KEY,
+  name VARCHAR(100),
+  email VARCHAR(100) UNIQUE,
+  phone VARCHAR(20),
+  total_orders INT DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE products (
+  id SERIAL PRIMARY KEY,
+  name VARCHAR(200),
+  sku VARCHAR(50),
+  price DECIMAL(10,2),
+  stock INT DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE accounting (
+  id SERIAL PRIMARY KEY,
+  type VARCHAR(20) CHECK (type IN ('income','expense','tax','refund')),
+  description TEXT,
+  category VARCHAR(100),
+  amount DECIMAL(10,2),
+  invoice_number VARCHAR(50),
+  notes TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE advertisements (
+  id SERIAL PRIMARY KEY,
+  name VARCHAR(200),
+  platform VARCHAR(50),
+  budget DECIMAL(10,2),
+  spent DECIMAL(10,2) DEFAULT 0,
+  impressions INT DEFAULT 0,
+  clicks INT DEFAULT 0,
+  target_audience TEXT,
+  status VARCHAR(20) DEFAULT 'active',
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+Row Level Security (RLS) :
+
+-- Activer RLS sur toutes les tables
+ALTER TABLE orders ENABLE ROW LEVEL SECURITY;
+ALTER TABLE clients ENABLE ROW LEVEL SECURITY;
+ALTER TABLE accounting ENABLE ROW LEVEL SECURITY;
+ALTER TABLE advertisements ENABLE ROW LEVEL SECURITY;
+
+-- Politique de base (accès authentifié uniquement)
+CREATE POLICY "Accès authentifié" ON orders FOR ALL USING (auth.role() = 'authenticated');
+-- Répétez pour chaque table
+Clés API Supabase :
+
+Settings → API → anon public key (pour le frontend si vous utilisez le SDK Supabase)
+Settings → API → service_role key (pour le backend — NE JAMAIS exposer côté client)
+4. CE QU'IL FAUT PERSONNALISER DANS LE CODE
+frontend/js/api.js ligne 2 :
+
+const API_URL = 'https://VOTRE-BACKEND.onrender.com/api';  // ← votre URL Render
+frontend/js/auth.js — Comptes par défaut (lignes 6-11) :
+
+const DEFAULT_USERS = [
+  { id: 1, name: 'Votre Nom Admin', email: 'admin@votredomaine.com', password: 'motdepasse_secure',
+    role: 'admin', plan: 'Agency', avatar: 'VN', joined: '2024-01-01' },
+  // Supprimez le compte jean@ecom.com en production
+];
+⚠️ Changez absolument les mots de passe avant mise en production.
+
+frontend/html/index.html — Textes marketing :
+
+Ligne 157 : Texte hero principal → votre accroche
+Lignes 163-166 : Statistiques (500+, 2M€, etc.) → vos vraies données
+Lignes 196-218 : Prix et plans → vos vrais tarifs
+frontend/html/help.html — Contact :
+
+Ligne 78 : support@ecomsolutions.fr → votre vrai email support
+frontend/js/sidebar.js — Nom de la plateforme :
+
+Ligne 54 : EcomSolutions → votre nom de marque
+frontend/css/main.css — Couleurs de marque :
+
+:root {
+  --primary: #4f6ef7;     /* ← votre couleur principale */
+  --secondary: #8b5cf6;   /* ← votre couleur secondaire */
+}
+5. INTÉGRATION GEMINI AI (gratuit)
+Obtenir une clé API :
+
+Allez sur ai.google.dev
+Cliquez "Get API key in Google AI Studio"
+Sign in with Google → Create API key → copiez la clé (AIza...)
+La clé est gratuite avec des limites généreuses (15 req/min, 1M tokens/jour)
+Configurer dans l'app :
+
+Connectez-vous → allez dans Aide (/help) → section "Configuration IA Gemini"
+Collez votre clé → cliquez "Sauvegarder" → "Tester"
+La clé est stockée dans localStorage('gemini_api_key') sur votre navigateur
+Fonctionnalités activées par Gemini :
+
+/chat.html → Assistant IA chat complet
+/bot.html → Chatbot automatisé
+geminiAnalyzeDashboard() → Analyse des KPIs dashboard
+geminiOptimizeAd() → Optimisation campagnes pub
+geminiAnalyze() → Analyse générale e-commerce
+Pour activer Gemini sur le dashboard automatiquement :
+Dans frontend/js/dashboard.js, ajoutez après loadKPIs() :
+
+// Analyse IA automatique des KPIs
+if (window.getGeminiKey && getGeminiKey()) {
+  const stats = { revenue: 12450, orders: 348, clients: 1285, convRate: 3.24 };
+  geminiAnalyzeDashboard(stats).then(analysis => {
+    // Afficher l'analyse dans un élément dédié
+    console.log('IA Analysis:', analysis);
+  });
+}
+6. ✅ CHECKLIST COMPLÈTE DE VÉRIFICATION
+AVANT DÉPLOIEMENT
+non terminé
+Changer les mots de passe des comptes démo dans auth.js
+non terminé
+Mettre votre URL Render dans api.js ligne 2
+non terminé
+Personaliser les textes marketing dans index.html
+non terminé
+Mettre votre email de contact dans help.html
+non terminé
+Personnaliser le nom de marque dans sidebar.js
+VERCEL
+non terminé
+Output Directory = frontend ✓
+non terminé
+Framework = Other (pas Next.js) ✓
+non terminé
+vercel.json présent à la racine ✓
+non terminé
+Toutes les routes HTML définies dans vercel.json ✓
+non terminé
+CSS/JS servis correctement (/(css|js)(.*) route) ✓
+non terminé
+Headers de sécurité configurés ✓
+RENDER (BACKEND)
+non terminé
+NODE_ENV=production configuré
+non terminé
+DATABASE_URL pointant vers Supabase
+non terminé
+JWT_SECRET fort (32+ caractères aléatoires)
+non terminé
+FRONTEND_URL = URL Vercel (pour CORS)
+non terminé
+Backend répond sur /api/health ou /api
+non terminé
+CORS configuré pour accepter votre domaine Vercel
+SUPABASE
+non terminé
+Tables créées : orders, clients, products, accounting, advertisements
+non terminé
+RLS activé sur toutes les tables
+non terminé
+DATABASE_URL copiée dans les variables Render
+non terminé
+Connexion backend → Supabase testée
+FONCTIONNALITÉS À TESTER
+non terminé
+Page d'accueil / s'affiche (landing page, pas login)
+non terminé
+Bouton "Se connecter" ouvre le modal d'auth
+non terminé
+Login admin fonctionne (admin@ecom.com / admin123)
+non terminé
+Sidebar s'affiche sur toutes les pages
+non terminé
+Dashboard charge les KPIs et graphiques
+non terminé
+Comptabilité : sidebar présente, tableau visible
+non terminé
+Publicités : page s'affiche (plus de page blanche)
+non terminé
+UGC Studio : canvas s'affiche et répond aux contrôles
+non terminé
+Rapports : bouton PDF ouvre fenêtre d'impression
+non terminé
+Rapports : bouton CSV télécharge un fichier
+non terminé
+Fournisseurs : liste s'affiche avec données démo
+non terminé
+Aide : FAQ accordion fonctionne
+non terminé
+Aide : configuration clé Gemini → test réussi
+non terminé
+Déconnexion → retour à la page d'accueil /
+non terminé
+Accès direct à /dashboard sans login → redirige vers /login
+GEMINI AI
+non terminé
+Clé API obtenue sur ai.google.dev
+non terminé
+Clé configurée dans /help → section IA
+non terminé
+Test Gemini réussi (bouton "Tester")
+non terminé
+Chat IA /chat répond correctement
+MOBILE
+non terminé
+Page d'accueil responsive (nav mobile, hero)
+non terminé
+Dashboard lisible sur mobile
+non terminé
+Sidebar se ferme/ouvre sur mobile
