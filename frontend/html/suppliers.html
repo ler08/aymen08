@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fournisseurs - EcomSolutions</title>
+  <link rel="stylesheet" href="/css/main.css">
+  <link rel="stylesheet" href="/css/composents.css">
+  
+</head>
+<body>
+<div class="app-layout">
+  <aside class="sidebar"></aside>
+  <main class="main-content">
+    <header class="topbar">
+      <div class="topbar-left"><h3 class="topbar-title">Fournisseurs</h3><p class="topbar-subtitle"></p></div>
+      <div class="topbar-right">
+        <button class="topbar-btn" onclick="window.location='/help.html'" title="Aide">❓</button>
+        <button class="topbar-btn topbar-avatar" id="user-avatar-btn" onclick="logout()" title="Déconnexion"></button>
+      </div>
+    </header>
+    <div class="page-container">
+      <div class="page-header">
+        <div class="page-header-left"><h1>🤝 Fournisseurs</h1><p>Gérez vos partenaires et fournisseurs</p></div>
+        <div class="page-header-actions">
+          <button class="btn btn-primary" onclick="openSupplierModal()">+ Ajouter Fournisseur</button>
+          <button class="btn btn-secondary" onclick="exportSuppliers()">📥 Export</button>
+        </div>
+      </div>
+
+      <!-- SEARCH + FILTER -->
+      <div class="card mb-24" style="padding:16px">
+        <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center">
+          <input type="search" id="searchSupplier" class="form-control form-control-sm" placeholder="🔍 Rechercher fournisseur..." style="flex:1;min-width:200px" oninput="filterSuppliers()">
+          <select id="filterCat" class="form-control form-control-sm" style="width:160px" onchange="filterSuppliers()">
+            <option value="">Toutes catégories</option>
+            <option value="Électronique">Électronique</option>
+            <option value="Mode">Mode</option>
+            <option value="Maison">Maison</option>
+            <option value="Beauté">Beauté</option>
+            <option value="Sport">Sport</option>
+            <option value="Autre">Autre</option>
+          </select>
+          <select id="filterStatus" class="form-control form-control-sm" style="width:140px" onchange="filterSuppliers()">
+            <option value="">Tous statuts</option>
+            <option value="active">Actif</option>
+            <option value="inactive">Inactif</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- TABLE -->
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">Liste des fournisseurs</h3>
+          <span id="supplier-count" style="font-size:.82rem;color:#5a5a78"></span>
+        </div>
+        <div class="table-scroll">
+          <table id="supplier-table">
+            <thead><tr><th>Nom</th><th>Email</th><th>Téléphone</th><th>Catégorie</th><th>Délai livraison</th><th>Note</th><th>Statut</th><th>Actions</th></tr></thead>
+            <tbody id="supplier-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- MODAL -->
+      <div class="modal-overlay" id="supplierModal" style="display:none">
+        <div class="modal" style="max-width:560px">
+          <div class="modal-header">
+            <h3 class="modal-title" id="supplier-modal-title">Nouveau Fournisseur</h3>
+            <button class="modal-close" onclick="closeModal('supplierModal')">✕</button>
+          </div>
+          <div class="modal-body">
+            <form id="supplierForm" onsubmit="handleSupplierSubmit(event)">
+              <div class="form-grid">
+                <div class="form-group"><label class="form-label">Nom *</label><input type="text" id="s-name" class="form-control" required placeholder="Nom entreprise"></div>
+                <div class="form-group"><label class="form-label">Email *</label><input type="email" id="s-email" class="form-control" required placeholder="contact@fournisseur.com"></div>
+              </div>
+              <div class="form-grid">
+                <div class="form-group"><label class="form-label">Téléphone</label><input type="tel" id="s-phone" class="form-control" placeholder="+33 ..."></div>
+                <div class="form-group"><label class="form-label">Catégorie</label>
+                  <select id="s-cat" class="form-control"><option>Électronique</option><option>Mode</option><option>Maison</option><option>Beauté</option><option>Sport</option><option>Autre</option></select></div>
+              </div>
+              <div class="form-grid">
+                <div class="form-group"><label class="form-label">Délai livraison (jours)</label><input type="number" id="s-delay" class="form-control" min="1" value="7"></div>
+                <div class="form-group"><label class="form-label">Note (/5)</label><input type="number" id="s-rating" class="form-control" min="1" max="5" step="0.5" value="4"></div>
+              </div>
+              <div class="form-group"><label class="form-label">Adresse</label><input type="text" id="s-address" class="form-control" placeholder="Adresse complète"></div>
+              <div class="form-group"><label class="form-label">Notes</label><textarea id="s-notes" class="form-control" rows="2" placeholder="Informations complémentaires..."></textarea></div>
+              <div class="form-group"><label class="form-label">Statut</label>
+                <select id="s-status" class="form-control"><option value="active">Actif</option><option value="inactive">Inactif</option></select></div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="closeModal('supplierModal')">Annuler</button>
+            <button class="btn btn-primary" onclick="document.getElementById('supplierForm').dispatchEvent(new Event('submit',{bubbles:true}))">Enregistrer</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+<div id="toast-container" class="toast-container"></div>
+<script src="/js/auth.js"></script>
+<script src="/js/api.js"></script>
+<script src="/js/sidebar.js"></script>
+<script src="/js/suppliers.js"></script>
+<script>(function(){const u=requireAuth();if(u){const b=document.getElementById('user-avatar-btn');if(b)b.textContent=u.avatar;}})();</script>
+</body>
+</html>

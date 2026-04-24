@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Connexion — EcomSolutions</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    :root{--bg:#09090f;--card:#16161f;--border:rgba(255,255,255,.07);--text:#f0f0f8;--muted:rgba(240,240,248,.55);--blue:#4f6ef7;--grad:linear-gradient(135deg,#4f6ef7,#8b5cf6)}
+    body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+    body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 60% 50% at 50% 0%,rgba(79,110,247,.1) 0%,transparent 60%);pointer-events:none}
+    .box{width:100%;max-width:420px;position:relative;z-index:1}
+    .head{text-align:center;margin-bottom:32px}
+    .logo{width:52px;height:52px;background:var(--grad);border-radius:13px;margin:0 auto 16px;display:flex;align-items:center;justify-content:center;font-size:1.3rem;box-shadow:0 8px 30px rgba(79,110,247,.3)}
+    h1{font-size:1.3rem;font-weight:800;margin-bottom:6px}
+    .sub{color:var(--muted);font-size:.85rem}
+    .tabs{display:flex;background:rgba(255,255,255,.04);border-radius:10px;padding:4px;margin-bottom:24px}
+    .tab{flex:1;padding:9px;border:none;background:transparent;color:rgba(240,240,248,.5);border-radius:7px;font-size:.86rem;font-weight:600;cursor:pointer;transition:all .2s;font-family:inherit}
+    .tab.on{background:rgba(255,255,255,.08);color:var(--text)}
+    .form{display:none}.form.on{display:block;animation:su .3s ease}
+    @keyframes su{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+    .fg{margin-bottom:14px}
+    .fl{display:block;font-size:.76rem;font-weight:600;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.04em}
+    .fi{width:100%;padding:11px 14px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:8px;color:var(--text);font-size:.87rem;outline:none;transition:all .2s;font-family:inherit}
+    .fi:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(79,110,247,.12);background:rgba(255,255,255,.06)}
+    .fi::placeholder{color:rgba(240,240,248,.3)}
+    .btn{width:100%;padding:12px;background:var(--grad);border:none;border-radius:10px;color:#fff;font-size:.9rem;font-weight:700;cursor:pointer;transition:all .2s;font-family:inherit;margin-top:4px}
+    .btn:hover{opacity:.9;transform:translateY(-1px)}
+    .div{text-align:center;margin:16px 0;font-size:.77rem;color:rgba(240,240,248,.4);position:relative}
+    .div::before,.div::after{content:'';position:absolute;top:50%;width:36%;height:1px;background:rgba(255,255,255,.08)}
+    .div::before{left:0}.div::after{right:0}
+    .demos{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+    .btn-demo{padding:9px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:8px;color:rgba(240,240,248,.7);font-size:.79rem;font-weight:600;cursor:pointer;transition:all .2s;font-family:inherit}
+    .btn-demo:hover{background:rgba(255,255,255,.08);color:var(--text)}
+    .err{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.25);color:#f87171;padding:9px 13px;border-radius:8px;font-size:.81rem;margin-bottom:12px;display:none}
+    .err.show{display:block}
+    .back{text-align:center;margin-top:20px;font-size:.82rem;color:var(--muted)}
+    .back a{color:var(--blue);font-weight:600}
+    .toast-container{position:fixed;bottom:24px;right:24px;z-index:9999;display:flex;flex-direction:column;gap:10px;pointer-events:none}
+    .toast{display:flex;align-items:center;gap:10px;padding:13px 17px;background:var(--card);border:1px solid rgba(255,255,255,.1);border-radius:10px;font-size:.86rem;font-weight:500;pointer-events:all;animation:sin .3s ease}
+    .toast-success{border-left:3px solid #10b981}.toast-error{border-left:3px solid #ef4444}.toast-info{border-left:3px solid var(--blue)}
+    @keyframes sin{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
+  </style>
+</head>
+<body>
+<div class="box">
+  <div class="head">
+    <div class="logo">💼</div>
+    <h1>EcomSolutions</h1>
+    <p class="sub">Plateforme e-commerce complète</p>
+  </div>
+  <div class="tabs">
+    <button class="tab on" id="t-login" onclick="sw('login')">Connexion</button>
+    <button class="tab" id="t-register" onclick="sw('register')">Inscription</button>
+  </div>
+  <!-- LOGIN -->
+  <div class="form on" id="f-login">
+    <div class="err" id="e-login"></div>
+    <div class="fg"><label class="fl">Email</label><input type="email" class="fi" id="l-email" placeholder="email@example.com" onkeydown="if(event.key==='Enter')doLogin()"></div>
+    <div class="fg"><label class="fl">Mot de passe</label><input type="password" class="fi" id="l-pass" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"></div>
+    <button class="btn" onclick="doLogin()">Se connecter →</button>
+    <div class="div">Comptes de démo</div>
+    <div class="demos">
+      <button class="btn-demo" onclick="doDemo('admin@ecom.com','admin123')">🛡️ Admin</button>
+      <button class="btn-demo" onclick="doDemo('jean@ecom.com','client123')">👤 Client</button>
+    </div>
+  </div>
+  <!-- REGISTER -->
+  <div class="form" id="f-register">
+    <div class="err" id="e-reg"></div>
+    <div class="fg"><label class="fl">Nom complet</label><input type="text" class="fi" id="r-name" placeholder="Votre nom"></div>
+    <div class="fg"><label class="fl">Email</label><input type="email" class="fi" id="r-email" placeholder="email@example.com"></div>
+    <div class="fg"><label class="fl">Mot de passe</label><input type="password" class="fi" id="r-pass" placeholder="Min. 8 caractères"></div>
+    <div class="fg"><label class="fl">Plan</label>
+      <select class="fi" id="r-plan"><option value="Starter">Starter — 29€/mois</option><option value="Pro">Pro — 79€/mois</option><option value="Agency">Agency — 199€/mois</option></select>
+    </div>
+    <button class="btn" onclick="doRegister()">Créer mon compte →</button>
+  </div>
+  <div class="back"><a href="/">← Retour à l'accueil</a></div>
+</div>
+<div id="toast-container" class="toast-container"></div>
+<script src="/js/auth.js"></script>
+<script>
+  if(getCurrentUser()) window.location.href='/dashboard.html';
+  function sw(t){
+    document.querySelectorAll('.tab').forEach(e=>e.classList.remove('on'));
+    document.querySelectorAll('.form').forEach(e=>e.classList.remove('on'));
+    document.getElementById('t-'+t).classList.add('on');
+    document.getElementById('f-'+t).classList.add('on');
+  }
+  function doLogin(){
+    const email=document.getElementById('l-email').value.trim();
+    const pass=document.getElementById('l-pass').value;
+    const err=document.getElementById('e-login');
+    if(!email||!pass){err.textContent='❌ Remplissez tous les champs.';err.classList.add('show');return;}
+    const r=login(email,pass,true);
+    if(!r.success){err.textContent='❌ '+r.message;err.classList.add('show');return;}
+    showToast('✅ Bienvenue '+r.user.name+' !','success');
+    setTimeout(()=>window.location.href='/dashboard.html',600);
+  }
+  function doRegister(){
+    const name=document.getElementById('r-name').value.trim();
+    const email=document.getElementById('r-email').value.trim();
+    const pass=document.getElementById('r-pass').value;
+    const plan=document.getElementById('r-plan').value;
+    const err=document.getElementById('e-reg');
+    if(!name||!email||!pass){err.textContent='❌ Remplissez tous les champs.';err.classList.add('show');return;}
+    if(pass.length<8){err.textContent='❌ Mot de passe trop court.';err.classList.add('show');return;}
+    const r=register(name,email,pass,plan);
+    if(!r.success){err.textContent='❌ '+r.message;err.classList.add('show');return;}
+    showToast('✅ Bienvenue '+r.user.name+' !','success');
+    setTimeout(()=>window.location.href='/dashboard.html',600);
+  }
+  function doDemo(email,pass){
+    const r=login(email,pass,true);
+    if(r.success){showToast('✅ Connecté: '+r.user.name,'success');setTimeout(()=>window.location.href='/dashboard.html',600);}
+  }
+</script>
+</body>
+</html>

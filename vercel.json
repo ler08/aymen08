@@ -1,103 +1,49 @@
 {
   "version": 2,
   "name": "ecomsolutions",
-  "builds": [
-    {
-      "src": "api/**/*.js",
-      "use": "@vercel/node"
-    },
-    {
-      "src": "public/**",
-      "use": "@vercel/static"
-    }
-  ],
+  "outputDirectory": "frontend",
   "routes": [
-    {
-      "src": "/api/(.*)",
-      "dest": "api/$1",
-      "methods": ["GET", "HEAD", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"]
-    },
-    {
-      "src": "/static/(.*)",
-      "dest": "public/static/$1"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/index.html"
-    }
+    { "src": "/", "dest": "/html/index.html" },
+    { "src": "/login", "dest": "/html/login.html" },
+    { "src": "/login.html", "dest": "/html/login.html" },
+    { "src": "/dashboard", "dest": "/html/dashboard.html" },
+    { "src": "/dashboard.html", "dest": "/html/dashboard.html" },
+    { "src": "/compta", "dest": "/html/compta.html" },
+    { "src": "/compta.html", "dest": "/html/compta.html" },
+    { "src": "/ads", "dest": "/html/ads.html" },
+    { "src": "/ads.html", "dest": "/html/ads.html" },
+    { "src": "/ugc", "dest": "/html/ugc.html" },
+    { "src": "/ugc.html", "dest": "/html/ugc.html" },
+    { "src": "/orders", "dest": "/html/orders.html" },
+    { "src": "/orders.html", "dest": "/html/orders.html" },
+    { "src": "/clients", "dest": "/html/clients.html" },
+    { "src": "/clients.html", "dest": "/html/clients.html" },
+    { "src": "/stock", "dest": "/html/stock.html" },
+    { "src": "/stock.html", "dest": "/html/stock.html" },
+    { "src": "/admin", "dest": "/html/admin.html" },
+    { "src": "/admin.html", "dest": "/html/admin.html" },
+    { "src": "/chat", "dest": "/html/chat.html" },
+    { "src": "/chat.html", "dest": "/html/chat.html" },
+    { "src": "/suppliers", "dest": "/html/suppliers.html" },
+    { "src": "/suppliers.html", "dest": "/html/suppliers.html" },
+    { "src": "/reports", "dest": "/html/reports.html" },
+    { "src": "/reports.html", "dest": "/html/reports.html" },
+    { "src": "/help", "dest": "/html/help.html" },
+    { "src": "/help.html", "dest": "/html/help.html" },
+    { "src": "/bot", "dest": "/html/bot.html" },
+    { "src": "/bot.html", "dest": "/html/bot.html" },
+    { "src": "/(css|js)(.*)", "dest": "/$1$2" },
+    { "src": "/(.*)\\.html$", "dest": "/html/$1.html" },
+    { "src": "/(.*)", "dest": "/html/$1.html" }
   ],
-  "env": {
-    "NODE_ENV": "production",
-    "DATABASE_URL": "@database_url",
-    "REDIS_URL": "@redis_url",
-    "JWT_SECRET": "@jwt_secret",
-    "STRIPE_SECRET_KEY": "@stripe_secret_key",
-    "SENDGRID_API_KEY": "@sendgrid_api_key",
-    "AWS_ACCESS_KEY_ID": "@aws_access_key_id",
-    "AWS_SECRET_ACCESS_KEY": "@aws_secret_access_key",
-    "AWS_S3_BUCKET": "@aws_s3_bucket",
-    "SUPABASE_URL": "@supabase_url",
-    "SUPABASE_KEY": "@supabase_key",
-    "GOOGLE_CLIENT_ID": "@google_client_id",
-    "GOOGLE_CLIENT_SECRET": "@google_client_secret"
-  },
-  "envPrefix": ["VITE_", "NEXT_PUBLIC_"],
   "headers": [
-    {
-      "source": "/api/(.*)",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "no-store"
-        },
-        {
-          "key": "X-Content-Type-Options",
-          "value": "nosniff"
-        }
-      ]
-    },
-    {
-      "source": "/static/(.*)",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "public, max-age=31536000, immutable"
-        }
-      ]
-    },
     {
       "source": "/(.*)",
       "headers": [
-        {
-          "key": "X-Frame-Options",
-          "value": "DENY"
-        },
-        {
-          "key": "X-XSS-Protection",
-          "value": "1; mode=block"
-        },
-        {
-          "key": "Strict-Transport-Security",
-          "value": "max-age=31536000; includeSubDomains"
-        }
+        { "key": "X-Frame-Options", "value": "SAMEORIGIN" },
+        { "key": "X-XSS-Protection", "value": "1; mode=block" },
+        { "key": "X-Content-Type-Options", "value": "nosniff" }
       ]
-    }
-  ],
-  "functions": {
-    "api/**/*.js": {
-      "memory": 1024,
-      "maxDuration": 60,
-      "runtime": "nodejs18.x"
-    }
-  },
-  "crons": [
-    {
-      "path": "/api/cron/cleanup",
-      "schedule": "0 2 * * *"
-    },
-    {
-      "path": "/api/cron/sync-orders",
-      "schedule": "*/30 * * * *"
     }
   ]
 }

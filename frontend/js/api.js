@@ -1,238 +1,113 @@
-// Configuration
-const API_URL = 'https://backend-ecom-wk72.onrender.com/api'; 
+// api.js — Appels API backend
+const API_URL = 'https://backend-ecom-wk72.onrender.com/api';
 let TOKEN = localStorage.getItem('token') || null;
 
-// Fonction générique pour les appels API
 async function apiCall(endpoint, method = 'GET', body = null) {
   try {
-    const options = {
+    const opts = {
       method,
-      headers: {
-        'Content-Type': 'application/json',
-        ...(TOKEN && { 'Authorization': `Bearer ${TOKEN}` })
-      }
+      headers: { 'Content-Type': 'application/json', ...(TOKEN && { 'Authorization': `Bearer ${TOKEN}` }) }
     };
-
-    if (body && (method === 'POST' || method === 'PATCH')) {
-      options.body = JSON.stringify(body);
+    if (body && ['POST','PATCH','PUT'].includes(method)) opts.body = JSON.stringify(body);
+    const res = await fetch(`${API_URL}${endpoint}`, opts);
+    if (!res.ok) {
+      let err = 'Erreur API';
+      try { const d = await res.json(); err = d.error || err; } catch(e) {}
+      throw new Error(err);
     }
-
-    const response = await fetch(`${API_URL}${endpoint}`, options);
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data.error || 'Erreur API');
-    }
-
-    return data;
-  } catch (error) {
-    console.error('API Error:', error);
-    throw error;
-  }
+    return await res.json();
+  } catch (err) { console.error('API Error:', err); throw err; }
 }
 
-// ============ AUTH ============
-async function registerUser(email, password, fullName, username) {
-  const data = await apiCall('/auth/register', 'POST', {
-    email,
-    password,
-    fullName,
-    username
-  });
-  TOKEN = data.token;
-  localStorage.setItem('token', TOKEN);
-  localStorage.setItem('user', JSON.stringify(data.user));
-  return data.user;
-}
-
+// AUTH
 async function loginUser(email, password) {
-  const data = await apiCall('/auth/login', 'POST', { email, password });
-  TOKEN = data.token;
-  localStorage.setItem('token', TOKEN);
-  localStorage.setItem('user', JSON.stringify(data.user));
-  return data.user;
+  const d = await apiCall('/auth/login', 'POST', { email, password });
+  TOKEN = d.token; localStorage.setItem('token', TOKEN); localStorage.setItem('user', JSON.stringify(d.user));
+  return d.user;
 }
-
-async function getCurrentUser() {
-  return await apiCall('/auth/me', 'GET');
+async function registerUser(email, password, fullName) {
+  const d = await apiCall('/auth/register', 'POST', { email, password, fullName });
+  TOKEN = d.token; localStorage.setItem('token', TOKEN); localStorage.setItem('user', JSON.stringify(d.user));
+  return d.user;
 }
+function logoutUser() { TOKEN = null; localStorage.removeItem('token'); localStorage.removeItem('user'); }
 
-function logoutUser() {
-  TOKEN = null;
-  localStorage.removeItem('token');
-  localStorage.removeItem('user');
-}
+// ORDERS
+async function getOrders() { return apiCall('/orders'); }
+async function createOrder(d) { return apiCall('/orders','POST',d); }
+async function updateOrder(id, d) { return apiCall(`/orders/${id}`,'PATCH',d); }
+async function deleteOrder(id) { return apiCall(`/orders/${id}`,'DELETE'); }
 
-// ============ ORDERS ============
-async function getOrders() {
-  return await apiCall('/orders', 'GET');
-}
+// CLIENTS
+async function getClients() { return apiCall('/clients'); }
+async function createClient(d) { return apiCall('/clients','POST',d); }
+async function updateClient(id, d) { return apiCall(`/clients/${id}`,'PATCH',d); }
+async function deleteClient(id) { return apiCall(`/clients/${id}`,'DELETE'); }
 
-async function createOrder(clientId, items, totalAmount, shippingAddress) {
-  return await apiCall('/orders', 'POST', {
-    clientId,
-    items,
-    totalAmount,
-    shippingAddress
-  });
-}
+// PRODUCTS
+async function getProducts() { return apiCall('/products'); }
+async function createProduct(d) { return apiCall('/products','POST',d); }
+async function updateProduct(id, d) { return apiCall(`/products/${id}`,'PATCH',d); }
+async function deleteProduct(id) { return apiCall(`/products/${id}`,'DELETE'); }
 
-async function updateOrder(orderId, status, paymentStatus) {
-  return await apiCall(`/orders/${orderId}`, 'PATCH', {
-    status,
-    paymentStatus
-  });
-}
-
-async function deleteOrder(orderId) {
-  return await apiCall(`/orders/${orderId}`, 'DELETE');
-}
-
-// ============ CLIENTS ============
-async function getClients() {
-  return await apiCall('/clients', 'GET');
-}
-
-async function createClient(clientData) {
-  return await apiCall('/clients', 'POST', clientData);
-}
-
-async function updateClient(clientId, clientData) {
-  return await apiCall(`/clients/${clientId}`, 'PATCH', clientData);
-}
-
-async function deleteClient(clientId) {
-  return await apiCall(`/clients/${clientId}`, 'DELETE');
-}
-
-// ============ PRODUCTS/STOCK ============
-async function getProducts() {
-  return await apiCall('/products', 'GET');
-}
-
-async function createProduct(productData) {
-  return await apiCall('/products', 'POST', productData);
-}
-
-async function updateProduct(productId, productData) {
-  return await apiCall(`/products/${productId}`, 'PATCH', productData);
-}
-
-async function deleteProduct(productId) {
-  return await apiCall(`/products/${productId}`, 'DELETE');
-}
-
-// ============ INVOICES ============
-async function getInvoices() {
-  return await apiCall('/invoices', 'GET');
-}
-
-async function createInvoice(orderId, clientName, clientEmail, amount, taxAmount) {
-  return await apiCall('/invoices', 'POST', {
-    orderId,
-    clientName,
-    clientEmail,
-    amount,
-    taxAmount
-  });
-}
-
+// INVOICES
+async function getInvoices() { return apiCall('/invoices'); }
+async function createInvoice(d) { return apiCall('/invoices','POST',d); }
 async function generateInvoicePDF(invoiceId) {
-  // Télécharger directement le PDF
-  const url = `${API_URL}/invoices/${invoiceId}/pdf`;
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = `facture-${invoiceId}.pdf`;
-  link.click();
+  try {
+    const res = await fetch(`${API_URL}/invoices/${invoiceId}/pdf`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...(TOKEN && { 'Authorization': `Bearer ${TOKEN}` }) }
+    });
+    if (!res.ok) throw new Error('Erreur génération PDF');
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `facture-${invoiceId}.pdf`;
+    document.body.appendChild(a); a.click();
+    document.body.removeChild(a); URL.revokeObjectURL(url);
+  } catch (err) { console.error('PDF error:', err); throw err; }
 }
 
-// ============ ACCOUNTING ============
-async function getAccounting() {
-  return await apiCall('/accounting', 'GET');
-}
-
-async function createAccountingEntry(entryData) {
-  return await apiCall('/accounting', 'POST', entryData);
-}
-
+// ACCOUNTING
+async function getAccounting() { return apiCall('/accounting'); }
+async function createAccountingEntry(d) { return apiCall('/accounting','POST',d); }
 async function exportAccountingCSV() {
-  window.location.href = `${API_URL}/accounting/export/csv`;
+  const a = document.createElement('a');
+  a.href = `${API_URL}/accounting/export/csv?token=${TOKEN||''}`;
+  a.download = `comptabilite-${new Date().toISOString().split('T')[0]}.csv`;
+  a.click();
 }
-
 async function exportAccountingExcel() {
-  window.location.href = `${API_URL}/accounting/export/excel`;
+  const a = document.createElement('a');
+  a.href = `${API_URL}/accounting/export/excel?token=${TOKEN||''}`;
+  a.download = `comptabilite-${new Date().toISOString().split('T')[0]}.xlsx`;
+  a.click();
 }
 
-// ============ ADVERTISEMENTS ============
-async function getAdvertisements() {
-  return await apiCall('/ads', 'GET');
-}
+// ADS
+async function getAdvertisements() { return apiCall('/ads'); }
+async function createAdvertisement(d) { return apiCall('/ads','POST',d); }
+async function updateAdvertisement(id, d) { return apiCall(`/ads/${id}`,'PATCH',d); }
+async function deleteAdvertisement(id) { return apiCall(`/ads/${id}`,'DELETE'); }
 
-async function createAdvertisement(adData) {
-  return await apiCall('/ads', 'POST', adData);
-}
+// ANALYTICS
+async function getDashboardStats() { return apiCall('/analytics/dashboard'); }
 
-async function updateAdvertisement(adId, adData) {
-  return await apiCall(`/ads/${adId}`, 'PATCH', adData);
-}
+// ADMIN
+async function getAllUsers() { return apiCall('/admin/users'); }
+async function getAdminStats() { return apiCall('/admin/stats'); }
+async function updateUserPlan(id, plan) { return apiCall(`/admin/users/${id}/plan`,'PATCH',{plan}); }
+async function deleteUser(id) { return apiCall(`/admin/users/${id}`,'DELETE'); }
 
-async function deleteAdvertisement(adId) {
-  return await apiCall(`/ads/${adId}`, 'DELETE');
-}
-
-// ============ ANALYTICS ============
-async function getDashboardStats() {
-  return await apiCall('/analytics/dashboard', 'GET');
-}
-
-// ============ ADMIN ============
-async function getAllUsers() {
-  return await apiCall('/admin/users', 'GET');
-}
-
-async function getAdminStats() {
-  return await apiCall('/admin/stats', 'GET');
-}
-
-async function updateUserPlan(userId, plan) {
-  return await apiCall(`/admin/users/${userId}/plan`, 'PATCH', { plan });
-}
-
-async function deleteUser(userId) {
-  return await apiCall(`/admin/users/${userId}`, 'DELETE');
-}
-
-// Export
-window.apiCall = apiCall;
-window.registerUser = registerUser;
-window.loginUser = loginUser;
-window.getCurrentUser = getCurrentUser;
-window.logoutUser = logoutUser;
-window.getOrders = getOrders;
-window.createOrder = createOrder;
-window.updateOrder = updateOrder;
-window.deleteOrder = deleteOrder;
-window.getClients = getClients;
-window.createClient = createClient;
-window.updateClient = updateClient;
-window.deleteClient = deleteClient;
-window.getProducts = getProducts;
-window.createProduct = createProduct;
-window.updateProduct = updateProduct;
-window.deleteProduct = deleteProduct;
-window.getInvoices = getInvoices;
-window.createInvoice = createInvoice;
-window.generateInvoicePDF = generateInvoicePDF;
-window.getAccounting = getAccounting;
-window.createAccountingEntry = createAccountingEntry;
-window.exportAccountingCSV = exportAccountingCSV;
-window.exportAccountingExcel = exportAccountingExcel;
-window.getAdvertisements = getAdvertisements;
-window.createAdvertisement = createAdvertisement;
-window.updateAdvertisement = updateAdvertisement;
-window.deleteAdvertisement = deleteAdvertisement;
-window.getDashboardStats = getDashboardStats;
-window.getAllUsers = getAllUsers;
-window.getAdminStats = getAdminStats;
-window.updateUserPlan = updateUserPlan;
-window.deleteUser = deleteUser;
+// Exports
+Object.assign(window, {
+  apiCall, loginUser, registerUser, logoutUser,
+  getOrders, createOrder, updateOrder, deleteOrder,
+  getClients, createClient, updateClient, deleteClient,
+  getProducts, createProduct, updateProduct, deleteProduct,
+  getInvoices, createInvoice, generateInvoicePDF,
+  getAccounting, createAccountingEntry, exportAccountingCSV, exportAccountingExcel,
+  getAdvertisements, createAdvertisement, updateAdvertisement, deleteAdvertisement,
+  getDashboardStats, getAllUsers, getAdminStats, updateUserPlan, deleteUser
+});

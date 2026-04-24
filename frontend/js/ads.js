@@ -2,236 +2,163 @@ let currentAdId = null;
 let allAds = [];
 
 document.addEventListener('DOMContentLoaded', async () => {
-  if (!checkAuth()) return;
+  const user = requireAuth();
+  if (!user) return;
   await loadAds();
 });
 
-// CHARGER PUBLICITÉS
 async function loadAds() {
   try {
-    showLoading();
-    const data = await getAds();
+    showLoadingTable(10);
+    const data = await getAdvertisements();
     allAds = data;
     renderAds(data);
-  } catch (error) {
-    showToast('Erreur lors du chargement des publicités', 'error');
+    updateAdsSummary(data);
+    setupAdsCharts(data);
+  } catch (err) {
+    showToast('Erreur chargement publicités', 'error');
+    renderAds([]);
   }
 }
 
-// AFFICHER TABLEAU PUBLICITÉS
 function renderAds(data) {
   const tbody = document.querySelector('table tbody');
   if (!tbody) return;
-
-  if (data.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:40px;">Aucune publicité</td></tr>';
-    hideLoading();
+  if (!data.length) {
+    tbody.innerHTML = `<tr><td colspan="10" class="table-empty"><div class="table-empty-icon">📣</div><div class="table-empty-text">Aucune campagne publicitaire</div></td></tr>`;
     return;
   }
-
-  tbody.innerHTML = data.map(ad => `
-    <tr>
+  tbody.innerHTML = data.map(ad => {
+    const ctr = ad.impressions > 0 ? ((ad.clicks||0)/ad.impressions*100).toFixed(2) : '0.00';
+    const statusMap = { active:'badge-green', paused:'badge-orange', completed:'badge-gray' };
+    const statusLabel = { active:'🟢 Active', paused:'⏸️ En pause', completed:'✅ Terminée' };
+    return `<tr>
+      <td><strong>${ad.name || ad.title || '—'}</strong></td>
+      <td>${platformIcon(ad.platform)} ${ad.platform || '—'}</td>
+      <td>${ad.target_audience || ad.audience || '—'}</td>
+      <td>€${(ad.budget||0).toFixed(2)}</td>
+      <td>€${(ad.spent||0).toFixed(2)}</td>
+      <td>${(ad.impressions||0).toLocaleString()}</td>
+      <td>${(ad.clicks||0).toLocaleString()}</td>
+      <td>${ctr}%</td>
+      <td><span class="badge ${statusMap[ad.status]||'badge-gray'}">${statusLabel[ad.status]||ad.status}</span></td>
       <td>
-        ${ad.image_url ? `<img src="${ad.image_url}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px;">` : '-'}
-      </td>
-      <td><strong>${ad.title}</strong></td>
-      <td>${ad.platform || '-'}</td>
-      <td>
-        <span class="status-badge status-${ad.status}">
-          ${ad.status === 'active' ? '🟢 Actif' : ad.status === 'pending' ? '🟡 En attente' : '🔴 Inactif'}
-        </span>
-      </td>
-      <td>€${(ad.budget || 0).toFixed(2)}</td>
-      <td>${ad.impressions || 0}</td>
-      <td>${ad.clicks || 0}</td>
-      <td>
-        <button class="btn-icon" onclick="editAd('${ad.id}', ${JSON.stringify(ad).replace(/'/g, '&quot;')})" title="Éditer">✏️</button>
-        <button class="btn-icon btn-danger" onclick="deleteAdConfirm('${ad.id}')" title="Supprimer">🗑️</button>
-      </td>
-    </tr>
-  `).join('');
-
-  hideLoading();
+        <button class="btn btn-sm btn-secondary" onclick="editAd('${ad.id}',${JSON.stringify(ad).replace(/'/g,"&apos;")})">✏️</button>
+        <button class="btn btn-sm btn-danger" onclick="deleteAdConfirm('${ad.id}')">🗑️</button>
+      </td></tr>`;
+  }).join('');
 }
 
-// OUVRIR MODAL CRÉER PUBLICITÉ
+function platformIcon(p) {
+  return {facebook:'📘',google:'🔍',tiktok:'🎵',linkedin:'💼',twitter:'🐦'}[p] || '📢';
+}
+
+function updateAdsSummary(data) {
+  const el = document.getElementById('adsSummary');
+  if (!el) return;
+  const active = data.filter(d=>d.status==='active').length;
+  const totalBudget = data.reduce((s,d)=>s+(d.budget||0),0);
+  const totalSpent = data.reduce((s,d)=>s+(d.spent||0),0);
+  const totalClicks = data.reduce((s,d)=>s+(d.clicks||0),0);
+  el.innerHTML = [
+    {l:'Campagnes actives',v:active,icon:'📣'},
+    {l:'Budget total',v:`€${totalBudget.toFixed(2)}`,icon:'💰'},
+    {l:'Dépensé',v:`€${totalSpent.toFixed(2)}`,icon:'📊'},
+    {l:'Clics totaux',v:totalClicks.toLocaleString(),icon:'👆'}
+  ].map(s=>`<div class="kpi-card"><div class="kpi-header"><span class="kpi-label">${s.l}</span><div class="kpi-icon-wrap">${s.icon}</div></div><div class="kpi-value">${s.v}</div></div>`).join('');
+}
+
+function setupAdsCharts(data) {
+  const c1 = document.getElementById('adsChart1');
+  const c2 = document.getElementById('adsChart2');
+  if (!window.Chart) return;
+  if (c1) {
+    if (c1._chart) c1._chart.destroy();
+    c1._chart = new Chart(c1, {
+      type: 'bar',
+      data: {
+        labels: data.map(d=>d.name||d.title||'?'),
+        datasets: [
+          {label:'Budget',data:data.map(d=>d.budget||0),backgroundColor:'rgba(79,110,247,0.7)'},
+          {label:'Dépensé',data:data.map(d=>d.spent||0),backgroundColor:'rgba(16,185,129,0.7)'}
+        ]
+      },
+      options: {responsive:true, plugins:{legend:{labels:{color:'#a0a0b8'}}}, scales:{x:{ticks:{color:'#a0a0b8'}},y:{ticks:{color:'#a0a0b8'}}}}
+    });
+  }
+  if (c2) {
+    if (c2._chart) c2._chart.destroy();
+    c2._chart = new Chart(c2, {
+      type: 'bar',
+      data: {
+        labels: data.map(d=>d.name||d.title||'?'),
+        datasets: [{label:'CTR (%)',data:data.map(d=>d.impressions>0?((d.clicks||0)/d.impressions*100).toFixed(2):0),backgroundColor:'rgba(139,92,246,0.7)'}]
+      },
+      options: {responsive:true, plugins:{legend:{labels:{color:'#a0a0b8'}}}, scales:{x:{ticks:{color:'#a0a0b8'}},y:{ticks:{color:'#a0a0b8'}}}}
+    });
+  }
+}
+
 function openCreateAdModal() {
   currentAdId = null;
-  document.getElementById('adForm').reset();
-  document.getElementById('adTitle').value = '';
-  document.getElementById('adDescription').value = '';
-  document.getElementById('adPlatform').value = 'facebook';
-  document.getElementById('adBudget').value = '';
-  document.getElementById('adImage').value = '';
+  document.getElementById('adForm')?.reset();
+  document.querySelector('#adModal .modal-header h2').textContent = 'Nouvelle Campagne';
+  openModal('adModal');
+}
+function editAd(id, ad) {
+  currentAdId = id;
+  const set = (i,v) => { const el=document.getElementById(i); if(el) el.value=v||''; };
+  set('adName', ad.name||ad.title);
+  set('adDescription', ad.description);
+  set('adPlatform', ad.platform);
+  set('adBudget', ad.budget);
+  set('adSpent', ad.spent);
+  set('adAudience', ad.target_audience||ad.audience);
+  set('adStatus', ad.status);
+  document.querySelector('#adModal .modal-header h2').textContent = 'Modifier Campagne';
   openModal('adModal');
 }
 
-// ÉDITER PUBLICITÉ
-function editAd(adId, ad) {
-  currentAdId = adId;
-  document.getElementById('adTitle').value = ad.title || '';
-  document.getElementById('adDescription').value = ad.description || '';
-  document.getElementById('adPlatform').value = ad.platform || 'facebook';
-  document.getElementById('adBudget').value = ad.budget || '';
-  document.getElementById('adImage').value = ad.image_url || '';
-  document.getElementById('adStatus').value = ad.status || 'pending';
-  openModal('adModal');
-}
-
-// SOUMETTRE FORMULAIRE PUBLICITÉ
-async function handleAdSubmit(event) {
-  event.preventDefault();
-
+async function handleAdSubmit(e) {
+  e.preventDefault();
   const data = {
-    title: document.getElementById('adTitle').value,
-    description: document.getElementById('adDescription').value,
-    platform: document.getElementById('adPlatform').value,
-    budget: parseFloat(document.getElementById('adBudget').value),
-    image_url: document.getElementById('adImage').value,
-    status: document.getElementById('adStatus')?.value || 'pending'
+    name: document.getElementById('adName')?.value,
+    description: document.getElementById('adDescription')?.value,
+    platform: document.getElementById('adPlatform')?.value,
+    budget: parseFloat(document.getElementById('adBudget')?.value) || 0,
+    spent: parseFloat(document.getElementById('adSpent')?.value) || 0,
+    target_audience: document.getElementById('adAudience')?.value,
+    status: document.getElementById('adStatus')?.value || 'active'
   };
-
   try {
-    if (currentAdId) {
-      await updateAd(currentAdId, data);
-      showToast('Publicité mise à jour ✅', 'success');
-    } else {
-      await createAd(data);
-      showToast('Publicité créée ✅', 'success');
-    }
-
+    if (currentAdId) await updateAdvertisement(currentAdId, data);
+    else await createAdvertisement(data);
+    showToast(currentAdId ? 'Campagne mise à jour ✅' : 'Campagne créée ✅', 'success');
     closeModal('adModal');
     await loadAds();
-  } catch (error) {
-    showToast(`Erreur: ${error.message}`, 'error');
-  }
+  } catch (err) { showToast(`Erreur: ${err.message}`, 'error'); }
 }
 
-// SUPPRIMER PUBLICITÉ
-async function deleteAdConfirm(adId) {
-  if (confirm('Êtes-vous sûr de vouloir supprimer cette publicité?')) {
-    try {
-      await deleteAd(adId);
-      showToast('Publicité supprimée ✅', 'success');
-      await loadAds();
-    } catch (error) {
-      showToast(`Erreur: ${error.message}`, 'error');
-    }
-  }
-}
-
-// ANALYTICS PUBLICITÉS
-async function loadAdAnalytics(adId) {
+async function deleteAdConfirm(id) {
+  if (!confirm('Supprimer cette campagne ?')) return;
   try {
-    const data = await apiCall(`/ads/${adId}/analytics`, 'GET');
-    
-    const modal = document.createElement('div');
-    modal.style.cssText = `
-      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0,0,0,0.5); display: flex; align-items: center;
-      justify-content: center; z-index: 2000;
-    `;
-    modal.innerHTML = `
-      <div style="background: var(--bg-card); padding: 24px; border-radius: 8px; max-width: 500px; width: 90%;">
-        <h2>Analytics Publicité</h2>
-        <div style="margin-top: 16px; display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
-          <div>
-            <div style="font-size: 0.85rem; color: var(--text-secondary);">Impressions</div>
-            <div style="font-size: 1.8rem; font-weight: 600; color: var(--primary);">${data.impressions || 0}</div>
-          </div>
-          <div>
-            <div style="font-size: 0.85rem; color: var(--text-secondary);">Clics</div>
-            <div style="font-size: 1.8rem; font-weight: 600; color: var(--primary);">${data.clicks || 0}</div>
-          </div>
-          <div>
-            <div style="font-size: 0.85rem; color: var(--text-secondary);">CTR</div>
-            <div style="font-size: 1.8rem; font-weight: 600; color: var(--primary);">
-              ${data.impressions > 0 ? ((data.clicks / data.impressions) * 100).toFixed(2) : 0}%
-            </div>
-          </div>
-          <div>
-            <div style="font-size: 0.85rem; color: var(--text-secondary);">Coût/Clic</div>
-            <div style="font-size: 1.8rem; font-weight: 600; color: var(--primary);">
-              €${data.clicks > 0 ? (data.spent / data.clicks).toFixed(2) : 0}
-            </div>
-          </div>
-        </div>
-        <button class="btn-primary" onclick="this.parentElement.parentElement.remove()" style="width: 100%; margin-top: 16px;">Fermer</button>
-      </div>
-    `;
-    document.body.appendChild(modal);
-  } catch (error) {
-    showToast(`Erreur: ${error.message}`, 'error');
-  }
+    await deleteAdvertisement(id);
+    showToast('Campagne supprimée', 'success');
+    await loadAds();
+  } catch(err) { showToast(`Erreur: ${err.message}`, 'error'); }
 }
 
-// API WRAPPERS
-async function createAd(data) {
-  return await apiCall('/ads', 'POST', data);
-}
-
-async function updateAd(adId, data) {
-  return await apiCall(`/ads/${adId}`, 'PATCH', data);
-}
-
-async function deleteAd(adId) {
-  return await apiCall(`/ads/${adId}`, 'DELETE');
-}
-
-async function getAds() {
-  return await apiCall('/ads', 'GET');
-}
-
-// UTILITIES
-function checkAuth() {
-  const user = JSON.parse(localStorage.getItem('user') || '{}');
-  if (!user.id) {
-    window.location.href = '/';
-    return false;
-  }
-  return true;
-}
-
-function showLoading() {
+function showLoadingTable(cols) {
   const tbody = document.querySelector('table tbody');
-  if (tbody) {
-    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;"><div class="spinner"></div></td></tr>';
-  }
+  if (tbody) tbody.innerHTML = `<tr><td colspan="${cols}" style="text-align:center;padding:40px;"><div class="spinner"></div></td></tr>`;
 }
 
-function hideLoading() {}
+document.addEventListener('DOMContentLoaded', () => {
+  const s = document.getElementById('searchAds');
+  if (s) s.addEventListener('input', e => {
+    const q = e.target.value.toLowerCase();
+    renderAds(allAds.filter(d => (d.name||d.title||'').toLowerCase().includes(q) || (d.platform||'').toLowerCase().includes(q)));
+  });
+});
 
-function openModal(modalId) {
-  const modal = document.getElementById(modalId);
-  if (modal) {
-    modal.style.display = 'flex';
-  }
-}
-
-function closeModal(modalId) {
-  const modal = document.getElementById(modalId);
-  if (modal) {
-    modal.style.display = 'none';
-  }
-}
-
-function showToast(message, type = 'info') {
-  const toast = document.createElement('div');
-  toast.style.cssText = `
-    position: fixed; bottom: 20px; right: 20px;
-    padding: 16px 20px; border-radius: 8px; z-index: 3000;
-    background: ${type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : '#3b82f6'};
-    color: white; font-weight: 500;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-  `;
-  toast.textContent = message;
-  document.body.appendChild(toast);
-  setTimeout(() => toast.remove(), 3000);
-}
-
-// Export
-window.openCreateAdModal = openCreateAdModal;
-window.editAd = editAd;
-window.handleAdSubmit = handleAdSubmit;
-window.deleteAdConfirm = deleteAdConfirm;
-window.loadAdAnalytics = loadAdAnalytics;
+Object.assign(window, { openCreateAdModal, editAd, handleAdSubmit, deleteAdConfirm });

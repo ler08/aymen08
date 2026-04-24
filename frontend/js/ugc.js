@@ -1,288 +1,171 @@
-// ============ STATE ============
-let canvas = null;
-let ctx = null;
+let ugcCanvas = null;
+let ugcCtx = null;
 let currentVideo = null;
 let currentAudio = null;
-let overlayImage = null;
 
 document.addEventListener('DOMContentLoaded', () => {
-  if (!checkAuth()) return;
-  initializeCanvas();
-  setupEventListeners();
+  const user = requireAuth();
+  if (!user) return;
+  initCanvas();
+  setupListeners();
+  loadTemplates();
 });
 
-// ============ CANVAS INITIALIZATION ============
-function initializeCanvas() {
-  canvas = document.getElementById('ugcCanvas');
-  if (!canvas) return;
-
-  ctx = canvas.getContext('2d');
-  
-  // Set canvas size
-  canvas.width = 1080;
-  canvas.height = 1920;
-
-  // Draw initial background
+function initCanvas() {
+  const preview = document.getElementById('ugcPreview');
+  if (!preview) return;
+  // Create canvas inside preview container
+  ugcCanvas = document.createElement('canvas');
+  ugcCanvas.id = 'ugcCanvas';
+  ugcCanvas.style.cssText = 'max-width:100%;height:auto;border-radius:8px;display:block;';
+  ugcCanvas.width = 1080;
+  ugcCanvas.height = 1920;
+  preview.innerHTML = '';
+  preview.appendChild(ugcCanvas);
+  ugcCtx = ugcCanvas.getContext('2d');
   drawCanvas();
 }
 
-// ============ DRAW CANVAS ============
 function drawCanvas() {
-  if (!canvas || !ctx) return;
-
-  const bgColor = document.getElementById('bgColor')?.value || '#ffffff';
-  const textContent = document.getElementById('overlayText')?.value || 'Votre texte ici';
-  const textColor = document.getElementById('textColor')?.value || '#000000';
-  const fontSize = parseInt(document.getElementById('fontSize')?.value || 32);
+  if (!ugcCtx) return;
+  const bg = document.getElementById('bgColor')?.value || '#1a1a2e';
+  const text = document.getElementById('overlayText')?.value || '';
+  const textColor = document.getElementById('textColor')?.value || '#ffffff';
+  const fontSize = parseInt(document.getElementById('fontSize')?.value || 48);
   const fontFamily = document.getElementById('fontFamily')?.value || 'Arial';
   const brightness = parseInt(document.getElementById('brightness')?.value || 100);
   const contrast = parseInt(document.getElementById('contrast')?.value || 100);
   const saturation = parseInt(document.getElementById('saturation')?.value || 100);
 
-  // Clear canvas
-  ctx.fillStyle = bgColor;
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ugcCtx.filter = `brightness(${brightness}%) contrast(${contrast}%) saturate(${saturation}%)`;
+  ugcCtx.fillStyle = bg;
+  ugcCtx.fillRect(0, 0, 1080, 1920);
+  ugcCtx.filter = 'none';
 
-  // Apply filters
-  ctx.filter = `brightness(${brightness}%) contrast(${contrast}%) saturate(${saturation}%)`;
-
-  // Draw overlay image if exists
-  if (overlayImage) {
-    ctx.drawImage(overlayImage, 0, 0, canvas.width, canvas.height);
+  if (text.trim()) {
+    ugcCtx.fillStyle = textColor;
+    ugcCtx.font = `bold ${fontSize}px ${fontFamily}`;
+    ugcCtx.textAlign = 'center';
+    ugcCtx.textBaseline = 'middle';
+    // Word wrap
+    const words = text.split(' ');
+    const lines = [];
+    let cur = '';
+    words.forEach(w => {
+      const test = cur ? cur + ' ' + w : w;
+      if (ugcCtx.measureText(test).width > 980) { if(cur) lines.push(cur); cur = w; }
+      else cur = test;
+    });
+    if (cur) lines.push(cur);
+    const lh = fontSize + 20;
+    const startY = 1920/2 - (lines.length * lh)/2;
+    lines.forEach((line, i) => ugcCtx.fillText(line, 540, startY + i * lh));
   }
+}
 
-  // Reset filter for text
-  ctx.filter = 'none';
+function loadTemplates() {
+  const grid = document.getElementById('templatesGrid');
+  if (!grid) return;
+  const templates = [
+    {name:'Dark Pro',bg:'#0a0a0f',tc:'#ffffff'},
+    {name:'Purple',bg:'#1a0a2e',tc:'#e0d0ff'},
+    {name:'Ocean',bg:'#0a1628',tc:'#7dd3fc'},
+    {name:'Forest',bg:'#0a1f0a',tc:'#86efac'},
+    {name:'Sunset',bg:'#1f0a0a',tc:'#fca5a5'},
+    {name:'Gold',bg:'#1a1000',tc:'#fcd34d'}
+  ];
+  grid.innerHTML = templates.map((t,i) => `
+    <div onclick="applyTemplate('${t.bg}','${t.tc}')" style="
+      background:${t.bg};color:${t.tc};border:1px solid rgba(255,255,255,0.1);
+      border-radius:8px;padding:10px;text-align:center;cursor:pointer;
+      font-size:0.78rem;font-weight:600;transition:all .2s;" title="${t.name}">
+      ${t.name}
+    </div>`).join('');
+}
 
-  // Draw text
-  ctx.fillStyle = textColor;
-  ctx.font = `bold ${fontSize}px ${fontFamily}`;
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
+function applyTemplate(bg, tc) {
+  const bgEl = document.getElementById('bgColor');
+  const tcEl = document.getElementById('textColor');
+  if (bgEl) bgEl.value = bg;
+  if (tcEl) tcEl.value = tc;
+  drawCanvas();
+  showToast('Template appliqué ✅', 'success');
+}
 
-  // Word wrap text
-  const words = textContent.split(' ');
-  const lines = [];
-  let currentLine = '';
-
-  words.forEach(word => {
-    const testLine = currentLine + (currentLine ? ' ' : '') + word;
-    const metrics = ctx.measureText(testLine);
-    if (metrics.width > canvas.width - 100) {
-      if (currentLine) lines.push(currentLine);
-      currentLine = word;
-    } else {
-      currentLine = testLine;
-    }
+function setupListeners() {
+  const ids = ['bgColor','textColor','fontFamily'];
+  ids.forEach(id => { const el = document.getElementById(id); if(el) el.addEventListener('change', drawCanvas); });
+  ['overlayText'].forEach(id => { const el = document.getElementById(id); if(el) el.addEventListener('input', drawCanvas); });
+  [['fontSize','fontSizeValue',''],['brightness','brightnessValue','%'],['contrast','contrastValue','%'],['saturation','saturationValue','%']].forEach(([id,valId,unit]) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.addEventListener('input', e => {
+      const vEl = document.getElementById(valId);
+      if (vEl) vEl.textContent = e.target.value + unit;
+      drawCanvas();
+    });
   });
-  if (currentLine) lines.push(currentLine);
-
-  // Draw lines
-  const totalHeight = lines.length * (fontSize + 20);
-  let startY = (canvas.height - totalHeight) / 2;
-
-  lines.forEach((line, index) => {
-    const y = startY + index * (fontSize + 20);
-    ctx.fillText(line, canvas.width / 2, y);
+  const vid = document.getElementById('videoUpload');
+  if (vid) vid.addEventListener('change', e => {
+    const f = e.target.files[0];
+    if (f) { currentVideo = URL.createObjectURL(f); showToast('Vidéo chargée ✅', 'success'); }
+  });
+  const aud = document.getElementById('audioUpload');
+  if (aud) aud.addEventListener('change', e => {
+    const f = e.target.files[0];
+    if (f) { currentAudio = URL.createObjectURL(f); showToast('Audio chargé ✅', 'success'); }
   });
 }
 
-// ============ EVENT LISTENERS ============
-function setupEventListeners() {
-  // Background color
-  const bgColorInput = document.getElementById('bgColor');
-  if (bgColorInput) {
-    bgColorInput.addEventListener('change', drawCanvas);
-  }
-
-  // Text color
-  const textColorInput = document.getElementById('textColor');
-  if (textColorInput) {
-    textColorInput.addEventListener('change', drawCanvas);
-  }
-
-  // Overlay text
-  const overlayTextInput = document.getElementById('overlayText');
-  if (overlayTextInput) {
-    overlayTextInput.addEventListener('input', drawCanvas);
-  }
-
-  // Font size
-  const fontSizeInput = document.getElementById('fontSize');
-  if (fontSizeInput) {
-    fontSizeInput.addEventListener('input', (e) => {
-      document.getElementById('fontSizeValue').textContent = e.target.value;
-      drawCanvas();
-    });
-  }
-
-  // Font family
-  const fontFamilyInput = document.getElementById('fontFamily');
-  if (fontFamilyInput) {
-    fontFamilyInput.addEventListener('change', drawCanvas);
-  }
-
-  // Brightness
-  const brightnessInput = document.getElementById('brightness');
-  if (brightnessInput) {
-    brightnessInput.addEventListener('input', (e) => {
-      document.getElementById('brightnessValue').textContent = e.target.value + '%';
-      drawCanvas();
-    });
-  }
-
-  // Contrast
-  const contrastInput = document.getElementById('contrast');
-  if (contrastInput) {
-    contrastInput.addEventListener('input', (e) => {
-      document.getElementById('contrastValue').textContent = e.target.value + '%';
-      drawCanvas();
-    });
-  }
-
-  // Saturation
-  const saturationInput = document.getElementById('saturation');
-  if (saturationInput) {
-    saturationInput.addEventListener('input', (e) => {
-      document.getElementById('saturationValue').textContent = e.target.value + '%';
-      drawCanvas();
-    });
-  }
-
-  // Video upload
-  const videoUpload = document.getElementById('videoUpload');
-  if (videoUpload) {
-    videoUpload.addEventListener('change', (e) => {
-      const file = e.target.files[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = (event) => {
-          currentVideo = event.target.result;
-          showToast('Vidéo chargée ✅', 'success');
-        };
-        reader.readAsDataURL(file);
-      }
-    });
-  }
-
-  // Audio upload
-  const audioUpload = document.getElementById('audioUpload');
-  if (audioUpload) {
-    audioUpload.addEventListener('change', (e) => {
-      const file = e.target.files[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = (event) => {
-          currentAudio = event.target.result;
-          showToast('Audio chargé ✅', 'success');
-        };
-        reader.readAsDataURL(file);
-      }
-    });
-  }
+function downloadAsImage() {
+  if (!ugcCanvas) return;
+  const a = document.createElement('a');
+  a.href = ugcCanvas.toDataURL('image/png');
+  a.download = `ugc-${Date.now()}.png`;
+  a.click();
+  showToast('Image PNG téléchargée ✅', 'success');
 }
-
-// ============ EXPORT FUNCTIONS ============
-async function downloadAsImage() {
-  try {
-    const link = document.createElement('a');
-    link.href = canvas.toDataURL('image/png');
-    link.download = `ugc-${new Date().getTime()}.png`;
-    link.click();
-    showToast('Image téléchargée ✅', 'success');
-  } catch (error) {
-    showToast(`Erreur: ${error.message}`, 'error');
-  }
+function downloadAsJPEG() {
+  if (!ugcCanvas) return;
+  const a = document.createElement('a');
+  a.href = ugcCanvas.toDataURL('image/jpeg', 0.95);
+  a.download = `ugc-${Date.now()}.jpg`;
+  a.click();
+  showToast('Image JPEG téléchargée ✅', 'success');
 }
-
-async function downloadAsJPEG() {
-  try {
-    const link = document.createElement('a');
-    link.href = canvas.toDataURL('image/jpeg', 0.95);
-    link.download = `ugc-${new Date().getTime()}.jpg`;
-    link.click();
-    showToast('Image JPEG téléchargée ✅', 'success');
-  } catch (error) {
-    showToast(`Erreur: ${error.message}`, 'error');
-  }
+function saveProject() {
+  const title = document.getElementById('projectTitle')?.value || 'Sans titre';
+  const data = {
+    title, bg: document.getElementById('bgColor')?.value,
+    text: document.getElementById('overlayText')?.value,
+    textColor: document.getElementById('textColor')?.value,
+    fontSize: document.getElementById('fontSize')?.value,
+    savedAt: new Date().toISOString()
+  };
+  localStorage.setItem('ugc_project', JSON.stringify(data));
+  showToast('Projet sauvegardé ✅', 'success');
 }
-
-async function previewVideo() {
-  if (!currentVideo) {
-    showToast('Veuillez d\'abord charger une vidéo', 'warning');
-    return;
-  }
-
+function resetProject() {
+  if (!confirm('Réinitialiser le projet ?')) return;
+  ['bgColor','textColor','overlayText','projectTitle'].forEach(id => {
+    const el = document.getElementById(id); if(el) el.value = '';
+  });
+  ['fontSize','brightness','contrast','saturation'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = id==='fontSize'?48:100;
+  });
+  drawCanvas();
+  showToast('Projet réinitialisé', 'info');
+}
+function previewVideo() {
+  if (!currentVideo) { showToast('Chargez une vidéo d\'abord', 'warning'); return; }
   const modal = document.createElement('div');
-  modal.style.cssText = `
-    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(0,0,0,0.9); display: flex; align-items: center;
-    justify-content: center; z-index: 2000;
-  `;
-  modal.innerHTML = `
-    <div style="position: relative; width: 90%; max-width: 600px;">
-      <video width="100%" controls style="border-radius: 8px;">
-        <source src="${currentVideo}" type="video/mp4">
-      </video>
-      <button onclick="this.parentElement.parentElement.remove()" 
-        style="position: absolute; top: 10px; right: 10px; width: 40px; height: 40px; 
-        background: rgba(255,255,255,0.9); border: none; border-radius: 50%; 
-        font-size: 20px; cursor: pointer;">✕</button>
-    </div>
-  `;
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.9);display:flex;align-items:center;justify-content:center;z-index:2000;';
+  modal.innerHTML = `<div style="position:relative;width:90%;max-width:400px;">
+    <video width="100%" controls style="border-radius:12px;"><source src="${currentVideo}"></video>
+    <button onclick="this.closest('div').parentElement.remove()" style="position:absolute;top:-14px;right:-14px;width:32px;height:32px;background:#fff;border:none;border-radius:50%;font-size:1rem;cursor:pointer;">✕</button>
+  </div>`;
   document.body.appendChild(modal);
 }
 
-async function uploadUGC() {
-  try {
-    if (!canvas) {
-      showToast('Canvas non disponible', 'error');
-      return;
-    }
-
-    showToast('Téléchargement en cours...', 'info');
-
-    // Convert canvas to blob
-    canvas.toBlob(async (blob) => {
-      const formData = new FormData();
-      formData.append('file', blob, `ugc-${new Date().getTime()}.png`);
-
-      const data = await apiCall('/ugc/upload', 'POST', formData);
-      showToast('UGC téléchargé ✅', 'success');
-    }, 'image/png');
-  } catch (error) {
-    showToast(`Erreur: ${error.message}`, 'error');
-  }
-}
-
-// ============ UTILITIES ============
-function checkAuth() {
-  const user = JSON.parse(localStorage.getItem('user') || '{}');
-  if (!user.id) {
-    window.location.href = '/';
-    return false;
-  }
-  return true;
-}
-
-function showToast(message, type = 'info') {
-  const toast = document.createElement('div');
-  toast.className = `toast toast-${type}`;
-  toast.textContent = message;
-  toast.style.cssText = `
-    position: fixed; bottom: 20px; right: 20px;
-    padding: 16px 20px; border-radius: 8px; z-index: 3000;
-    background: ${type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : '#3b82f6'};
-    color: white; font-weight: 500;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    animation: slideIn 0.3s ease;
-  `;
-  document.body.appendChild(toast);
-  setTimeout(() => toast.remove(), 3000);
-}
-
-// Export functions
-window.downloadAsImage = downloadAsImage;
-window.downloadAsJPEG = downloadAsJPEG;
-window.previewVideo = previewVideo;
-window.uploadUGC = uploadUGC;
+Object.assign(window, { downloadAsImage, downloadAsJPEG, saveProject, resetProject, previewVideo, applyTemplate });

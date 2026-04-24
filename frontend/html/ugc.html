@@ -4,158 +4,115 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>UGC Studio - EcomSolutions</title>
-  <link rel="stylesheet" href="../css/main.css">
-  <link rel="stylesheet" href="../css/components.css">
-  <link rel="stylesheet" href="../css/ugc.css">
+  <link rel="stylesheet" href="/css/main.css">
+  <link rel="stylesheet" href="/css/composents.css">
+  <link rel="stylesheet" href="/css/ugc.css">
 </head>
 <body>
-  <div class="app-wrapper">
-    <!-- SIDEBAR -->
-    <aside class="sidebar" id="sidebar"></aside>
-
-    <!-- MAIN -->
-    <main class="main-content">
-      <!-- HEADER -->
-      <div class="header">
-        <div class="header-left">
-          <button class="btn-sidebar" onclick="toggleSidebar()">☰</button>
-          <h1>🎬 UGC Studio</h1>
-        </div>
-        <div class="header-right">
-          <button class="btn-primary" onclick="saveProject()">💾 Sauvegarder</button>
-          <button class="btn-secondary" onclick="downloadAsImage()">📥 Télécharger</button>
-          <button class="btn-secondary" onclick="resetProject()">🔄 Réinitialiser</button>
-          <div class="user-menu" id="userMenu"></div>
+<div class="app-layout">
+  <aside class="sidebar"></aside>
+  <main class="main-content">
+    <header class="topbar">
+      <div class="topbar-left">
+        <h3 class="topbar-title">UGC Studio</h3>
+        <p class="topbar-subtitle"></p>
+      </div>
+      <div class="topbar-right">
+        <button class="topbar-btn" onclick="window.location='/help.html'" title="Aide">❓</button>
+        <button class="topbar-btn topbar-avatar" id="user-avatar-btn" onclick="logout()" title="Déconnexion"></button>
+      </div>
+    </header>
+    <div class="page-container">
+      <div class="page-header">
+        <div class="page-header-left"><h1>🎬 UGC Studio</h1><p>Créez des visuels pour vos publicités</p></div>
+        <div class="page-header-actions">
+          <button class="btn btn-secondary" onclick="saveProject()">💾 Sauvegarder</button>
+          <button class="btn btn-secondary" onclick="downloadAsImage()">📥 PNG</button>
+          <button class="btn btn-secondary" onclick="downloadAsJPEG()">📷 JPEG</button>
+          <button class="btn btn-primary" onclick="resetProject()">🔄 Reset</button>
         </div>
       </div>
 
-      <!-- CONTENT -->
-      <div class="content">
-        <div class="ugc-container">
-          <!-- PREVIEW -->
-          <div class="ugc-preview" id="ugcCanvas"></div>
+      <div style="display:grid;grid-template-columns:1fr 340px;gap:24px;align-items:start">
+        <!-- PREVIEW -->
+        <div class="card" style="padding:16px">
+          <div class="card-header"><h3 class="card-title">Aperçu</h3><span style="font-size:.8rem;color:#5a5a78">Format 9:16 (1080×1920)</span></div>
+          <div id="ugcPreview" style="width:100%;max-width:280px;margin:0 auto;border-radius:12px;overflow:hidden;border:1px solid var(--border);background:#1a1a2e">
+            <!-- Canvas injecté par ugc.js -->
+          </div>
+        </div>
 
-          <!-- EDITOR -->
-          <div class="ugc-editor">
-            <!-- PROJECT INFO -->
-            <div class="control-group">
-              <div class="control-group-title">📋 Projet</div>
-              <input type="text" id="projectTitle" placeholder="Titre du projet" style="width: 100%; padding: 8px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm);">
+        <!-- CONTROLS -->
+        <div style="display:flex;flex-direction:column;gap:16px">
+          <!-- Project name -->
+          <div class="card" style="padding:16px">
+            <div style="font-size:.82rem;font-weight:700;color:#a0a0b8;margin-bottom:10px;text-transform:uppercase;letter-spacing:.04em">📋 Projet</div>
+            <input type="text" id="projectTitle" class="form-control" placeholder="Nom du projet...">
+          </div>
+
+          <!-- Templates -->
+          <div class="card" style="padding:16px">
+            <div style="font-size:.82rem;font-weight:700;color:#a0a0b8;margin-bottom:10px;text-transform:uppercase;letter-spacing:.04em">🎨 Templates</div>
+            <div id="templatesGrid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px"></div>
+          </div>
+
+          <!-- Colors -->
+          <div class="card" style="padding:16px">
+            <div style="font-size:.82rem;font-weight:700;color:#a0a0b8;margin-bottom:10px;text-transform:uppercase;letter-spacing:.04em">🎨 Couleurs</div>
+            <div style="display:flex;gap:16px;align-items:center">
+              <label style="display:flex;align-items:center;gap:8px;font-size:.83rem;cursor:pointer">Fond<input type="color" id="bgColor" value="#1a1a2e" style="width:36px;height:36px;cursor:pointer;border:none;background:none"></label>
+              <label style="display:flex;align-items:center;gap:8px;font-size:.83rem;cursor:pointer">Texte<input type="color" id="textColor" value="#ffffff" style="width:36px;height:36px;cursor:pointer;border:none;background:none"></label>
             </div>
+          </div>
 
-            <!-- TEMPLATES -->
-            <div class="control-group">
-              <div class="control-group-title">🎨 Templates</div>
-              <div class="templates-grid" id="templatesGrid"></div>
+          <!-- Text -->
+          <div class="card" style="padding:16px">
+            <div style="font-size:.82rem;font-weight:700;color:#a0a0b8;margin-bottom:10px;text-transform:uppercase;letter-spacing:.04em">✍️ Texte</div>
+            <textarea id="overlayText" class="form-control" rows="3" placeholder="Votre texte ici..."></textarea>
+            <div style="display:flex;align-items:center;gap:10px;margin-top:10px;font-size:.82rem">
+              <label>Taille</label>
+              <input type="range" id="fontSize" min="16" max="120" value="48" style="flex:1">
+              <span id="fontSizeValue" style="min-width:30px;text-align:right">48</span>
             </div>
+            <select id="fontFamily" class="form-control" style="margin-top:8px">
+              <option value="Arial">Arial</option>
+              <option value="Georgia">Georgia</option>
+              <option value="Impact">Impact</option>
+              <option value="Courier New">Courier</option>
+            </select>
+          </div>
 
-            <!-- COLORS -->
-            <div class="control-group">
-              <div class="control-group-title">🎨 Couleurs</div>
-              <div class="control-buttons">
-                <label style="display: flex; align-items: center; gap: 8px;">
-                  <span style="font-size: 0.8rem;">Fond:</span>
-                  <input type="color" id="bgColor" value="#ffffff" style="width: 40px; height: 40px; cursor: pointer;">
-                </label>
-                <label style="display: flex; align-items: center; gap: 8px;">
-                  <span style="font-size: 0.8rem;">Texte:</span>
-                  <input type="color" id="textColor" value="#000000" style="width: 40px; height: 40px; cursor: pointer;">
-                </label>
-              </div>
+          <!-- Filters -->
+          <div class="card" style="padding:16px">
+            <div style="font-size:.82rem;font-weight:700;color:#a0a0b8;margin-bottom:10px;text-transform:uppercase;letter-spacing:.04em">🎞️ Filtres</div>
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <div style="display:flex;align-items:center;gap:10px;font-size:.82rem"><label style="width:80px">Luminosité</label><input type="range" id="brightness" min="50" max="150" value="100" style="flex:1"><span id="brightnessValue" style="min-width:36px;text-align:right">100%</span></div>
+              <div style="display:flex;align-items:center;gap:10px;font-size:.82rem"><label style="width:80px">Contraste</label><input type="range" id="contrast" min="50" max="150" value="100" style="flex:1"><span id="contrastValue" style="min-width:36px;text-align:right">100%</span></div>
+              <div style="display:flex;align-items:center;gap:10px;font-size:.82rem"><label style="width:80px">Saturation</label><input type="range" id="saturation" min="0" max="200" value="100" style="flex:1"><span id="saturationValue" style="min-width:36px;text-align:right">100%</span></div>
             </div>
+          </div>
 
-            <!-- TEXT -->
-            <div class="control-group">
-              <div class="control-group-title">✍️ Texte</div>
-              <textarea id="overlayText" placeholder="Entrez votre texte..." style="width: 100%; padding: 8px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); min-height: 60px; font-family: Arial, sans-serif;"></textarea>
-
-              <div class="control-slider">
-                <label>Taille:</label>
-                <input type="range" id="fontSize" min="12" max="120" value="32">
-                <span id="fontSizeValue" style="min-width: 40px;">32</span>
-              </div>
-
-              <label style="display: block; margin-top: 8px;">
-                <span style="font-size: 0.8rem;">Police:</span>
-                <select id="fontFamily" style="width: 100%; margin-top: 4px; padding: 6px; border: 1px solid var(--border); border-radius: var(--radius-sm);">
-                  <option value="Arial">Arial</option>
-                  <option value="Georgia">Georgia</option>
-                  <option value="Courier">Courier</option>
-                  <option value="Impact">Impact</option>
-                </select>
-              </label>
-            </div>
-
-            <!-- FILTERS -->
-            <div class="control-group">
-              <div class="control-group-title">🎞️ Filtres</div>
-
-              <div class="control-slider">
-                <label>Luminosité:</label>
-                <input type="range" id="brightness" min="50" max="150" value="100">
-                <span id="brightnessValue" style="min-width: 40px;">100%</span>
-              </div>
-
-              <div class="control-slider">
-                <label>Contraste:</label>
-                <input type="range" id="contrast" min="50" max="150" value="100">
-                <span id="contrastValue" style="min-width: 40px;">100%</span>
-              </div>
-
-<div class="control-slider">
-  <label>Saturation:</label>
-  <input type="range" id="saturation" min="0" max="200" value="100">
-  <span id="saturationValue" style="min-width: 40px;">100%</span>
+          <!-- Media -->
+          <div class="card" style="padding:16px">
+            <div style="font-size:.82rem;font-weight:700;color:#a0a0b8;margin-bottom:10px;text-transform:uppercase;letter-spacing:.04em">📹 Média</div>
+            <label style="display:block;padding:12px;border:1px dashed var(--border);border-radius:8px;cursor:pointer;text-align:center;font-size:.82rem;color:#5a5a78;transition:all .2s" onmouseover="this.style.borderColor='#4f6ef7'" onmouseout="this.style.borderColor='var(--border)'">
+              🎥 Charger une vidéo<input type="file" id="videoUpload" accept="video/*" style="display:none">
+            </label>
+            <label style="display:block;padding:12px;border:1px dashed var(--border);border-radius:8px;cursor:pointer;text-align:center;font-size:.82rem;color:#5a5a78;margin-top:8px;transition:all .2s" onmouseover="this.style.borderColor='#4f6ef7'" onmouseout="this.style.borderColor='var(--border)'">
+              🎵 Charger audio<input type="file" id="audioUpload" accept="audio/*" style="display:none">
+            </label>
+            <button class="btn btn-secondary" style="width:100%;margin-top:8px" onclick="previewVideo()">👁️ Prévisualiser vidéo</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
 </div>
-</div>
-
-<!-- MEDIA -->
-<div class="control-group">
-<div class="control-group-title">📹 Média</div>
-
-<label class="media-upload" onclick="document.getElementById('videoUpload').click()">
-  <div class="media-upload-icon">🎥</div>
-  <div class="media-upload-text">Cliquez pour ajouter une vidéo</div>
-  <input type="file" id="videoUpload" accept="video/*">
-</label>
-
-<label class="media-upload" onclick="document.getElementById('audioUpload').click()" style="margin-top: 12px;">
-  <div class="media-upload-icon">🎵</div>
-  <div class="media-upload-text">Cliquez pour ajouter de l'audio</div>
-  <input type="file" id="audioUpload" accept="audio/*">
-</label>
-
-<button class="btn-secondary" onclick="previewVideo()" style="width: 100%; margin-top: 12px;">
-  👁️ Prévisualiser
-</button>
-</div>
-
-<!-- EXPORT OPTIONS -->
-<div class="control-group">
-<div class="control-group-title">📤 Export</div>
-<div class="export-options">
-  <button class="export-option" onclick="downloadAsImage()">
-    <div class="export-option-icon">🖼️</div>
-    <div class="export-option-title">PNG</div>
-    <div class="export-option-desc">Image haute qualité</div>
-  </button>
-  <button class="export-option" onclick="downloadAsJPEG()">
-    <div class="export-option-icon">📷</div>
-    <div class="export-option-title">JPEG</div>
-    <div class="export-option-desc">Format compressé</div>
-  </button>
-</div>
-</div>
-</div>
-</div>
-</div>
-</main>
-</div>
-
-<!-- SCRIPTS -->
-<script src="../js/api.js"></script>
-<script src="../js/sidebar.js"></script>
-<script src="../js/ugc.js"></script>
+<div id="toast-container" class="toast-container"></div>
+<script src="/js/auth.js"></script>
+<script src="/js/api.js"></script>
+<script src="/js/sidebar.js"></script>
+<script src="/js/ugc.js"></script>
+<script>(function(){const u=requireAuth();if(u){const b=document.getElementById('user-avatar-btn');if(b)b.textContent=u.avatar;}})();</script>
 </body>
 </html>
-
